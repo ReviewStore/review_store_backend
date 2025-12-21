@@ -22,4 +22,13 @@ public class ErrorResponse {
             .timestamp(LocalDateTime.now())
             .build();
     }
+
+    public static ErrorResponse of(ErrorCode errorCode, String message) {
+        return ErrorResponse.builder()
+            .status(errorCode.getStatus())
+            .code(errorCode.getCode())
+            .message(message)
+            .timestamp(LocalDateTime.now())
+            .build();
+    }
 }
