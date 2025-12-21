@@ -4,6 +4,7 @@ import com.retro.global.common.dto.ErrorResponse;
 import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -18,6 +19,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     protected ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
         log.error("BusinessException: {}", e.getMessage());
+        if (StringUtils.hasText(e.getMessage())) {
+            ErrorResponse response = ErrorResponse.of(e.getErrorCode(), e.getMessage());
+            return ResponseEntity
+                .status(e.getErrorCode().getStatus())
+                .body(response);
+        }
         ErrorResponse response = ErrorResponse.of(e.getErrorCode());
         return ResponseEntity
             .status(e.getErrorCode().getStatus())
