@@ -5,15 +5,20 @@ import com.retro.domain.auth.application.dto.request.AgreeTermsRequest;
 import com.retro.domain.auth.application.dto.response.AppleAuthCodeDto;
 import com.retro.global.common.dto.ApiResponse;
 import com.retro.global.common.jwt.JwtToken;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Auth API", description = "인증 및 소셜 로그인 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
@@ -21,23 +26,83 @@ public class AuthController {
 
   private final AuthService authService;
 
-  @PostMapping("/redirect/apple")
-  public ApiResponse<AppleAuthCodeDto> appleRedirect(@RequestParam Map<String, String> payload) throws Exception {
+  @Operation(
+      summary = "애플 로그인 리디렉션 수신",
+      description = "애플 인증 서버에서 전송하는 콜백을 수신합니다. 애플 서버 전용 엔드포인트입니다."
+  )
+  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공",
+      content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+          examples = @ExampleObject(value = """
+                {
+                  "status": 200,
+                  "message": "SUCCESS",
+                  "data": {
+                    "code": "apple_auth_code_sample"
+                  }
+                }
+                """)))
+  @PostMapping(value = "/redirect/apple", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+  public ApiResponse<AppleAuthCodeDto> appleRedirect(
+      @Parameter(hidden = true) @RequestParam Map<String, String> payload
+  ) throws Exception {
     String authCode = payload.get("code");
-    AppleAuthCodeDto appleAuthCodeDto = AppleAuthCodeDto.of(authCode);
-    return ApiResponse.success(appleAuthCodeDto);
+    return ApiResponse.success(AppleAuthCodeDto.of(authCode));
   }
 
+  @Operation(summary = "애플 로그인 처리", description = "인증 코드로 JWT 토큰을 발급합니다.")
+  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공",
+      content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+          examples = @ExampleObject(value = """
+                {
+                  "status": 200,
+                  "message": "SUCCESS",
+                  "data": {
+                    "accessToken": "eyJhbGciOiJIUzI1...",
+                    "refreshToken": "eyJhbGciOiJIUzI1...",
+                    "accessTokenExpiredDate": 1735000000000,
+                    "refreshTokenExpiredDate": 1736000000000,
+                    "userId": 42
+                  }
+                }
+                """)))
   @PostMapping("/oauth2/login/apple")
-  public ApiResponse<JwtToken> appleLogin(@RequestParam String code) throws Exception {
-    JwtToken jwtToken = authService.appleLogin(code);
-    return ApiResponse.success(jwtToken);
+  public ApiResponse<JwtToken> appleLogin(
+      @Parameter(description = "애플 인증 코드", example = "c7e.apple.auth.code")
+      @RequestParam String code
+  ) throws Exception {
+    return ApiResponse.success(authService.appleLogin(code));
   }
 
+  @Operation(summary = "약관 동의 및 회원가입 완료", description = "임시 ID로 약관 동의 후 최종 토큰을 발급합니다.")
+  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공",
+      content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+          examples = @ExampleObject(value = """
+                {
+                  "status": 200,
+                  "message": "SUCCESS",
+                  "data": {
+                    "accessToken": "new_access_token",
+                    "refreshToken": "new_refresh_token",
+                    "accessTokenExpiredDate": 1735000000000,
+                    "refreshTokenExpiredDate": 1736000000000,
+                    "userId": 42
+                  }
+                }
+                """)))
   @PostMapping("/agree-terms")
-  public ApiResponse<JwtToken> registerTerms(@Validated @RequestBody AgreeTermsRequest request) {
-    JwtToken jwtToken = authService.registerTerms(request);
-    return ApiResponse.success(jwtToken);
+  public ApiResponse<JwtToken> registerTerms(
+      @RequestBody(
+          content = @Content(
+              schema = @Schema(implementation = AgreeTermsRequest.class),
+              examples = @ExampleObject(value = """
+                    {
+                      "tempMemberId": "temp_12345",
+                      "marketingAgreed": true,
+                      "nickname": "레트로보이"
+                    }
+                    """)))
+      @Validated @org.springframework.web.bind.annotation.RequestBody AgreeTermsRequest request
+  ) {
+    return ApiResponse.success(authService.registerTerms(request));
   }
-
 }

@@ -20,7 +20,7 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/swagger-resources/**"
                 ).permitAll()  // Swagger 관련 경로 허용
-                .requestMatchers("/api/auth/**").permitAll()  // 로그인 API는 인증 없이
+                .requestMatchers("/api/v1/auth/**").permitAll()  // 로그인 API는 인증 없이
                 .requestMatchers("/api/test/**").permitAll()  // 테스트
                 .anyRequest().authenticated()  // 위 엔드포인트 제외 auth 인증 필요
 
