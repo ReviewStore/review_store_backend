@@ -19,6 +19,11 @@ public class MemberRepositoryImpl implements MemberRepository {
   }
 
   @Override
+  public Optional<Member> findById(Long id) {
+    return memberJPARepository.findById(id);
+  }
+
+  @Override
   public boolean existsByProviderAndProviderId(Provider provider, String providerId) {
     return memberJPARepository.existsByProviderAndProviderId(provider, providerId);
   }

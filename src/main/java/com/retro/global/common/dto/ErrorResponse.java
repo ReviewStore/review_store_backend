@@ -12,6 +12,7 @@ public class ErrorResponse {
     private final String code;
     private final String message;
     private final LocalDateTime timestamp;
+    private Object data;
 
     // ErrorCode Enum에서 ErrorResponse 생성
     public static ErrorResponse of(ErrorCode errorCode) {
@@ -28,6 +29,17 @@ public class ErrorResponse {
             .status(errorCode.getStatus())
             .code(errorCode.getCode())
             .message(message)
+            .timestamp(LocalDateTime.now())
+            .build();
+    }
+
+    // 신규 회원 약관 동의 전용 에러
+    public static ErrorResponse of(ErrorCode errorCode, Object data) {
+        return ErrorResponse.builder()
+            .status(errorCode.getStatus())
+            .code(errorCode.getCode())
+            .message(errorCode.getMessage())
+            .data(data)
             .timestamp(LocalDateTime.now())
             .build();
     }
