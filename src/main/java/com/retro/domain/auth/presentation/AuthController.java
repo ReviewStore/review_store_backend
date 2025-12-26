@@ -2,6 +2,8 @@ package com.retro.domain.auth.presentation;
 
 import com.retro.domain.auth.application.AuthService;
 import com.retro.domain.auth.application.dto.request.AgreeTermsRequest;
+import com.retro.domain.auth.application.dto.request.GoogleLoginRequest;
+import com.retro.domain.auth.application.dto.request.RefreshRequest;
 import com.retro.domain.auth.application.dto.response.AppleAuthCodeDto;
 import com.retro.global.common.dto.ApiResponse;
 import com.retro.global.common.jwt.JwtToken;
@@ -10,10 +12,12 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.http.StreamingHttpOutputMessage.Body;
+import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
+@Slf4j
 public class AuthController {
 
   private final AuthService authService;
@@ -73,6 +78,13 @@ public class AuthController {
     return ApiResponse.success(authService.appleLogin(code));
   }
 
+  @Operation(summary = "구글 로그인", description = "Google ID Token으로 JWT 토큰을 발급합니다.")
+  @PostMapping("/oauth2/login/google")
+  public ApiResponse<JwtToken> googleLogin(@RequestBody GoogleLoginRequest request) {
+    JwtToken jwtToken = authService.googleLogin(request.getIdToken());
+    return ApiResponse.success(jwtToken);
+  }
+
   @Operation(summary = "약관 동의 및 회원가입 완료", description = "임시 ID로 약관 동의 후 최종 토큰을 발급합니다.")
   @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공",
       content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -91,18 +103,21 @@ public class AuthController {
                 """)))
   @PostMapping("/agree-terms")
   public ApiResponse<JwtToken> registerTerms(
-      @RequestBody(
-          content = @Content(
-              schema = @Schema(implementation = AgreeTermsRequest.class),
-              examples = @ExampleObject(value = """
-                    {
-                      "tempMemberId": "temp_12345",
-                      "marketingAgreed": true,
-                      "nickname": "레트로보이"
-                    }
-                    """)))
-      @Validated @org.springframework.web.bind.annotation.RequestBody AgreeTermsRequest request
+      @RequestBody()
+      @Validated @io.swagger.v3.oas.annotations.parameters.RequestBody AgreeTermsRequest request
   ) {
     return ApiResponse.success(authService.registerTerms(request));
+  }
+
+  @Operation(
+      summary = "JWT 토큰 재발급", 
+      description = "Refresh Token으로 Access Token과 Refresh Token을 모두 재발급합니다. (Sliding Session)"
+  )
+  @PostMapping("/refresh")
+  public ApiResponse<JwtToken> refresh(
+      @RequestBody @Validated RefreshRequest request
+  ) {
+    JwtToken newToken = authService.refresh(request.refreshToken());
+    return ApiResponse.success(newToken);
   }
 }

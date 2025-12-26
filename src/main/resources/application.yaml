@@ -2,6 +2,31 @@ spring:
   application:
     name: retro
 
+  # 민감 정보는 application-secret.yaml에 분리
+  profiles:
+    include: secret
+
+  # 데이터베이스 설정 (민감 정보 제외)
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  # JPA 설정
+  jpa:
+    database: postgresql
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Redis 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# 서버 설정
 server:
   port: 8080
 

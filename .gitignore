@@ -17,8 +17,10 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
-# application-secret.yml 파일 무시
 application-secret.yml
+application-secret.yaml
+**/application-secret.yml
+**/application-secret.yaml
 
 ### IntelliJ IDEA ###
 .idea
