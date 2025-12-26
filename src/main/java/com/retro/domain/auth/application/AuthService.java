@@ -32,7 +32,7 @@ public class AuthService {
     if (memberFoundByProvider.isPresent()) {
       Member member = memberFoundByProvider.get();
       JwtToken jwtToken = jwtProvider.createToken(member.getId(),
-          member.getRole().name());
+          member.getRole().getCode());
       redisService.saveMemberRefreshToken(member.getId(), jwtToken.getRefreshToken());
       return jwtToken;
     }
@@ -67,7 +67,7 @@ public class AuthService {
         request.nickname(), term);
     memberRepository.save(member);
 
-    JwtToken jwtToken = jwtProvider.createToken(member.getId(), member.getRole().name());
+    JwtToken jwtToken = jwtProvider.createToken(member.getId(), member.getRole().getCode());
     redisService.saveMemberRefreshToken(member.getId(), jwtToken.getRefreshToken());
 
     return jwtToken;

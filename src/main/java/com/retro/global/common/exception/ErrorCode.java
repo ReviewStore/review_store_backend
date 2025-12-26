@@ -19,7 +19,8 @@ public enum ErrorCode {
 
     // ===== 9000번대: 공통 에러 =====
     INVALID_INPUT_VALUE(400, "COMMON-9001", "유효하지 않은 입력값입니다."),
-    UNAUTHORIZED(400, "COMMON-9002", "권한이 없습니다.");
+    UNAUTHORIZED(400, "COMMON-9002", "권한이 없습니다."),
+    INTERNAL_SERVER_ERROR(500, "COMMON-9003", "서버 내부 오류가 발생했습니다.");
 
     private final int status;
     private final String code;
