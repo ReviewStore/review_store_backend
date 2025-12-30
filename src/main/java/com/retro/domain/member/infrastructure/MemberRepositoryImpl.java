@@ -1,8 +1,9 @@
-package com.retro.domain.member.infrastructure.jpa;
+package com.retro.domain.member.infrastructure;
 
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.entity.Provider;
+import com.retro.domain.member.infrastructure.jpa.MemberJPARepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

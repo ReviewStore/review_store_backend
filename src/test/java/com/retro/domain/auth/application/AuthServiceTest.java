@@ -75,7 +75,7 @@ class AuthServiceTest {
     when(appleOAuth2Service.processAppleLogin(anyString())).thenReturn(oAuth2AppleMemberInfo);
     when(memberRepository.findByProviderAndProviderId(any(Provider.class), anyString())).thenReturn(
         Optional.of(member));
-    when(jwtProvider.createToken(member.getId(), member.getRole().name())).thenReturn(jwtToken);
+    when(jwtProvider.createToken(member.getId(), member.getRole().getCode())).thenReturn(jwtToken);
 
     // when
     JwtToken response = authService.appleLogin(authCode);
@@ -84,11 +84,14 @@ class AuthServiceTest {
     assertThat(response).isNotNull();
     assertThat(response.getAccessToken()).isEqualTo(jwtToken.getAccessToken());
     assertThat(response.getRefreshToken()).isEqualTo(jwtToken.getRefreshToken());
-    assertThat(response.getAccessTokenExpiredDate()).isEqualTo(jwtToken.getAccessTokenExpiredDate());
-    assertThat(response.getRefreshTokenExpiredDate()).isEqualTo(jwtToken.getRefreshTokenExpiredDate());
-    verify(appleOAuth2Service,times(1)).processAppleLogin(anyString());
-    verify(memberRepository,times(1)).findByProviderAndProviderId(any(Provider.class), anyString());
-    verify(jwtProvider,times(1)).createToken(anyLong(), anyString());
+    assertThat(response.getAccessTokenExpiredDate()).isEqualTo(
+        jwtToken.getAccessTokenExpiredDate());
+    assertThat(response.getRefreshTokenExpiredDate()).isEqualTo(
+        jwtToken.getRefreshTokenExpiredDate());
+    verify(appleOAuth2Service, times(1)).processAppleLogin(anyString());
+    verify(memberRepository, times(1)).findByProviderAndProviderId(any(Provider.class),
+        anyString());
+    verify(jwtProvider, times(1)).createToken(anyLong(), anyString());
   }
 
   @Test
@@ -105,17 +108,20 @@ class AuthServiceTest {
     when(appleOAuth2Service.processAppleLogin(anyString())).thenReturn(oAuth2AppleMemberInfo);
     when(memberRepository.findByProviderAndProviderId(any(Provider.class), anyString())).thenReturn(
         Optional.empty());
-    doNothing().when(redisService).saveTempMemberInfo(anyString(), any(OAuth2AppleMemberInfo.class));
+    doNothing().when(redisService)
+        .saveTempMemberInfo(anyString(), any(OAuth2AppleMemberInfo.class));
 
     // when & then
     assertThatThrownBy(() -> authService.appleLogin(authCode))
         .isInstanceOf(MemberNotRegisteredException.class)
         .extracting("errorCode")
-        .isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
+        .isEqualTo(ErrorCode.TERMS_AGREEMENT_REQUIRED);
 
-    verify(appleOAuth2Service,times(1)).processAppleLogin(anyString());
-    verify(memberRepository,times(1)).findByProviderAndProviderId(any(Provider.class), anyString());
-    verify(redisService,times(1)).saveTempMemberInfo(anyString(), any(OAuth2AppleMemberInfo.class));
+    verify(appleOAuth2Service, times(1)).processAppleLogin(anyString());
+    verify(memberRepository, times(1)).findByProviderAndProviderId(any(Provider.class),
+        anyString());
+    verify(redisService, times(1)).saveTempMemberInfo(anyString(),
+        any(OAuth2AppleMemberInfo.class));
 
   }
 

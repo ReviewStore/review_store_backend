@@ -1,18 +1,16 @@
 package com.retro.domain.member.domain;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.entity.Provider;
 import com.retro.domain.member.domain.entity.Term;
-import com.retro.domain.member.infrastructure.jpa.MemberRepositoryImpl;
+import com.retro.domain.member.infrastructure.MemberRepositoryImpl;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import(MemberRepositoryImpl.class)
