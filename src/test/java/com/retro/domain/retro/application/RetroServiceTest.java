@@ -12,8 +12,11 @@ import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.request.QuestionRequest;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
+import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
+import com.retro.domain.retro.domain.entity.Keyword;
 import com.retro.domain.retro.domain.entity.Retro;
+import com.retro.domain.retro.domain.repository.KeywordRepository;
 import com.retro.domain.retro.domain.repository.RetroRepository;
 import com.retro.global.common.exception.BusinessException;
 import com.retro.global.common.exception.ErrorCode;
@@ -40,6 +43,9 @@ class RetroServiceTest {
 
   @Mock
   private MemberRepository memberRepository;
+
+  @Mock
+  private KeywordRepository keywordRepository;
 
   @Nested
   @DisplayName("회고 생성(createRetro) 테스트")
@@ -114,6 +120,53 @@ class RetroServiceTest {
           .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MEMBER_NOT_FOUND);
 
       verify(retroRepository, never()).save(any());
+    }
+
+    @Nested
+    @DisplayName("키워드 검색(searchKeywords) 테스트")
+    class SearchKeywords {
+
+      @Test
+      @DisplayName("성공: 검색어가 포함된 키워드 목록을 반환한다.")
+      void successSearchKeywords() {
+        // given
+        String searchContent = "데이터";
+        List<Keyword> mockKeywords = List.of(
+            Keyword.of("데이터 분석가", "개발/데이터"),
+            Keyword.of("빅데이터", "개발/데이터")
+        );
+
+        // keywordRepository가 해당 키워드 리스트를 반환하도록 모킹
+        given(keywordRepository.findAllByContentContaining(searchContent))
+            .willReturn(mockKeywords);
+
+        // when
+        List<KeywordResponse> result = retroService.searchKeywords(searchContent);
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).name()).isEqualTo("데이터 분석가");
+        assertThat(result.get(0).category()).isEqualTo("개발/데이터");
+        assertThat(result.get(1).name()).isEqualTo("빅데이터");
+
+        verify(keywordRepository).findAllByContentContaining(searchContent);
+      }
+
+      @Test
+      @DisplayName("성공: 검색 결과가 없는 경우 빈 리스트를 반환한다.")
+      void successSearchKeywordsWithEmptyResult() {
+        // given
+        String searchContent = "존재하지않는키워드";
+        given(keywordRepository.findAllByContentContaining(searchContent))
+            .willReturn(List.of());
+
+        // when
+        List<KeywordResponse> result = retroService.searchKeywords(searchContent);
+
+        // then
+        assertThat(result).isEmpty();
+        verify(keywordRepository).findAllByContentContaining(searchContent);
+      }
     }
   }
 }
