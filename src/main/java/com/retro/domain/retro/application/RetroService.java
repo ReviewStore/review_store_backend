@@ -3,12 +3,15 @@ package com.retro.domain.retro.application;
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
+import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
 import com.retro.domain.retro.domain.entity.Retro;
+import com.retro.domain.retro.domain.repository.KeywordRepository;
 import com.retro.domain.retro.domain.repository.RetroRepository;
 import com.retro.global.common.exception.BusinessException;
 import com.retro.global.common.exception.ErrorCode;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ public class RetroService {
 
   private final RetroRepository retroRepository;
   private final MemberRepository memberRepository;
+  private final KeywordRepository keywordRepository;
 
   @Transactional
   public Retro createRetro(Long memberId, RetroCreateRequest request) {
@@ -45,6 +49,13 @@ public class RetroService {
 
   private boolean isNotEmptyQuestions(RetroCreateRequest request) {
     return !CollectionUtils.isEmpty(request.questions());
+  }
+  
+  public List<KeywordResponse> searchKeywords(String content) {
+    return keywordRepository.findAllByContentContaining(content)
+        .stream()
+        .map(KeywordResponse::from)
+        .collect(Collectors.toList());
   }
 
 
