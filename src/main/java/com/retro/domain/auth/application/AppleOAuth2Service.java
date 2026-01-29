@@ -5,6 +5,8 @@ import com.retro.domain.auth.application.dto.response.ApplePublicKeyDto.ApplePub
 import com.retro.domain.auth.application.dto.response.AppleTokenResponseDto;
 import com.retro.domain.auth.application.dto.response.OAuth2AppleMemberInfo;
 import com.retro.domain.member.domain.entity.Provider;
+import com.retro.global.common.dto.MemberDevice;
+import com.retro.global.common.enums.DeviceType;
 import com.retro.global.common.jwt.MyKeyLocator;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -30,8 +32,10 @@ public class AppleOAuth2Service {
 
   private static final long THIRTY_DAYS_MS = 30L * 24 * 60 * 60 * 1000;
   private static final String BASE_URL = "https://appleid.apple.com";
-  @Value("${spring.oauth2.apple.client-id}")
-  private String clientId;
+  @Value("${spring.oauth2.apple.client-id-app}")
+  private String clientIdApp;
+  @Value("${spring.oauth2.apple.client-id-web}")
+  private String clientIdWeb;
   @Value("${spring.oauth2.apple.private-key}")
   private String privateKey;
   @Value("${spring.oauth2.apple.key-id}")
@@ -39,11 +43,15 @@ public class AppleOAuth2Service {
   @Value("${spring.oauth2.apple.team-id}")
   private String teamId;
 
-  public OAuth2AppleMemberInfo processAppleLogin(String authCode) {
-    AppleTokenResponseDto appleTokenResponseDto = getAppleTokenResponse(authCode);
+  public OAuth2AppleMemberInfo processAppleLogin(String authCode, MemberDevice memberDevice) {
+    AppleTokenResponseDto appleTokenResponseDto = getAppleTokenResponse(authCode, memberDevice);
     return verifyIdToken(appleTokenResponseDto.getIdToken());
   }
-  private AppleTokenResponseDto getAppleTokenResponse(String authCode){
+
+  private AppleTokenResponseDto getAppleTokenResponse(String authCode, MemberDevice memberDevice) {
+    String clientId =
+        memberDevice.getDeviceType().equals(DeviceType.APP) ? clientIdApp : clientIdWeb;
+
     WebClient webClient = WebClient.builder()
         .baseUrl(BASE_URL)
         .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded;charset=utf-8")
@@ -54,7 +62,7 @@ public class AppleOAuth2Service {
           .uri(uriBuilder -> uriBuilder.path("/auth/token")
               .queryParam("grant_type", "authorization_code")
               .queryParam("client_id", clientId)
-              .queryParam("client_secret", makeClientSecretToken())
+              .queryParam("client_secret", makeClientSecretToken(clientId))
               .queryParam("code", authCode)
               .build())
           .retrieve()
@@ -101,7 +109,7 @@ public class AppleOAuth2Service {
 
   }
 
-  private String makeClientSecretToken() {
+  private String makeClientSecretToken(String clientId) {
     String token = Jwts.builder()
         .subject(clientId) // sub
         .issuer(teamId) // iss
@@ -115,7 +123,8 @@ public class AppleOAuth2Service {
         .and()
         .signWith(getPrivateKey(), Jwts.SIG.ES256)
         .compact();
-    return token;  }
+    return token;
+  }
 
   private PrivateKey getPrivateKey() {
     try {
