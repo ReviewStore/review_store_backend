@@ -8,6 +8,7 @@ import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.entity.Provider;
 import com.retro.domain.member.domain.entity.Term;
+import com.retro.global.common.dto.MemberDevice;
 import com.retro.global.common.exception.BusinessException;
 import com.retro.global.common.exception.ErrorCode;
 import com.retro.global.common.jwt.JwtProvider;
@@ -30,8 +31,9 @@ public class AuthService {
   private final JwtProvider jwtProvider;
   private final MemberRepository memberRepository;
 
-  public JwtToken appleLogin(String authCode) {
-    OAuth2AppleMemberInfo appleMemberInfo = appleOAuth2Service.processAppleLogin(authCode);
+  public JwtToken appleLogin(String authCode, MemberDevice memberDevice) {
+    OAuth2AppleMemberInfo appleMemberInfo = appleOAuth2Service.processAppleLogin(authCode,
+        memberDevice);
     Optional<Member> memberFoundByProvider = findByProvider(appleMemberInfo);
 
     if (memberFoundByProvider.isPresent()) {

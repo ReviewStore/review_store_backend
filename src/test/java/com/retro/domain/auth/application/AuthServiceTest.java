@@ -17,10 +17,13 @@ import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.entity.Provider;
 import com.retro.domain.member.domain.entity.Term;
+import com.retro.global.common.dto.MemberDevice;
+import com.retro.global.common.enums.DeviceType;
 import com.retro.global.common.exception.ErrorCode;
 import com.retro.global.common.jwt.JwtProvider;
 import com.retro.global.common.jwt.JwtToken;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,6 +44,13 @@ class AuthServiceTest {
   private JwtProvider jwtProvider;
   @Mock
   private MemberRepository memberRepository;
+  private MemberDevice memberDevice;
+
+
+  @BeforeEach
+  public void setUp() {
+    memberDevice = new MemberDevice(DeviceType.APP);
+  }
 
   @Test
   void testSucceedAppleLogin() {
@@ -72,13 +82,14 @@ class AuthServiceTest {
         .userId(member.getId())
         .build();
 
-    when(appleOAuth2Service.processAppleLogin(anyString())).thenReturn(oAuth2AppleMemberInfo);
+    when(appleOAuth2Service.processAppleLogin(anyString(), any(MemberDevice.class))).thenReturn(
+        oAuth2AppleMemberInfo);
     when(memberRepository.findByProviderAndProviderId(any(Provider.class), anyString())).thenReturn(
         Optional.of(member));
     when(jwtProvider.createToken(member.getId(), member.getRole().getCode())).thenReturn(jwtToken);
 
     // when
-    JwtToken response = authService.appleLogin(authCode);
+    JwtToken response = authService.appleLogin(authCode, memberDevice);
 
     // then
     assertThat(response).isNotNull();
@@ -88,7 +99,7 @@ class AuthServiceTest {
         jwtToken.getAccessTokenExpiredDate());
     assertThat(response.getRefreshTokenExpiredDate()).isEqualTo(
         jwtToken.getRefreshTokenExpiredDate());
-    verify(appleOAuth2Service, times(1)).processAppleLogin(anyString());
+    verify(appleOAuth2Service, times(1)).processAppleLogin(anyString(), any(MemberDevice.class));
     verify(memberRepository, times(1)).findByProviderAndProviderId(any(Provider.class),
         anyString());
     verify(jwtProvider, times(1)).createToken(anyLong(), anyString());
@@ -105,19 +116,20 @@ class AuthServiceTest {
         .provider(Provider.APPLE)
         .build();
 
-    when(appleOAuth2Service.processAppleLogin(anyString())).thenReturn(oAuth2AppleMemberInfo);
+    when(appleOAuth2Service.processAppleLogin(anyString(), any(MemberDevice.class))).thenReturn(
+        oAuth2AppleMemberInfo);
     when(memberRepository.findByProviderAndProviderId(any(Provider.class), anyString())).thenReturn(
         Optional.empty());
     doNothing().when(redisService)
         .saveTempMemberInfo(anyString(), any(OAuth2AppleMemberInfo.class));
 
     // when & then
-    assertThatThrownBy(() -> authService.appleLogin(authCode))
+    assertThatThrownBy(() -> authService.appleLogin(authCode, memberDevice))
         .isInstanceOf(MemberNotRegisteredException.class)
         .extracting("errorCode")
         .isEqualTo(ErrorCode.TERMS_AGREEMENT_REQUIRED);
 
-    verify(appleOAuth2Service, times(1)).processAppleLogin(anyString());
+    verify(appleOAuth2Service, times(1)).processAppleLogin(anyString(), any(MemberDevice.class));
     verify(memberRepository, times(1)).findByProviderAndProviderId(any(Provider.class),
         anyString());
     verify(redisService, times(1)).saveTempMemberInfo(anyString(),
