@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.retro.domain.member.application.MemberFacade;
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.request.QuestionRequest;
@@ -23,7 +24,6 @@ import com.retro.global.common.exception.ErrorCode;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -47,6 +47,9 @@ class RetroServiceTest {
   @Mock
   private KeywordRepository keywordRepository;
 
+  @Mock
+  private MemberFacade memberFacade;
+
   @Nested
   @DisplayName("회고 생성(createRetro) 테스트")
   class CreateRetro {
@@ -58,18 +61,21 @@ class RetroServiceTest {
       Long memberId = 1L;
       Member member = mock(Member.class);
       RetroCreateRequest request = mock(RetroCreateRequest.class);
+
       List<QuestionRequest> questionRequests = List.of(
           QuestionRequest.of(1, "기술", "JVM이란?", "답변", "좋음", 5)
       );
+
       Retro retro = Retro.of(member, "카카오", "백엔드", LocalDate.now(), "1차", "#Java", "K", "P", "T",
           "요약");
+
       List<InterviewQuestion> questions = List.of(
           InterviewQuestion.of(1, "기술", "JVM이란?", "답변", "상", 3)
       );
 
-      given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
+      given(memberFacade.getMember(memberId)).willReturn(member);
       given(request.toEntity(member)).willReturn(retro);
-      given(request.questions()).willReturn(questionRequests); // isNotEmptyQuestions 통과용
+      given(request.questions()).willReturn(questionRequests);
       given(request.toQuestionEntities()).willReturn(questions);
       given(retroRepository.save(any(Retro.class))).willReturn(retro);
 
@@ -79,9 +85,15 @@ class RetroServiceTest {
       // then
       assertThat(result).isNotNull();
       assertThat(result.getQuestions()).hasSize(1);
-      assertThat(result.getQuestions().get(0).getRetro()).isEqualTo(result); // 양방향 연관관계 확인
+      assertThat(result.getQuestions().get(0).getRetro()).isEqualTo(result);
+
+      verify(memberFacade).getMember(memberId);
       verify(retroRepository).save(retro);
+
+      // 회원 조회가 Facade로 이동했다면 repository 조회는 호출되면 안 됨
+      verify(memberRepository, never()).findById(any());
     }
+
 
     @Test
     @DisplayName("성공: 질문이 없는 경우에도 회고 본문만 정상적으로 저장된다.")
@@ -90,21 +102,26 @@ class RetroServiceTest {
       Long memberId = 1L;
       Member member = mock(Member.class);
       RetroCreateRequest request = mock(RetroCreateRequest.class);
+
       Retro retro = Retro.of(member, "네이버", "FE", LocalDate.now(), "2차", "#React", "K", "P", "T",
           "요약");
 
-      given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
+      given(memberFacade.getMember(memberId)).willReturn(member);
       given(request.toEntity(member)).willReturn(retro);
-      given(request.questions()).willReturn(Collections.emptyList()); // 질문 없음
+      given(request.questions()).willReturn(Collections.emptyList());
 
       // when
       retroService.createRetro(memberId, request);
 
       // then
       assertThat(retro.getQuestions()).isEmpty();
-      verify(request, never()).toQuestionEntities(); // 질문 변환 로직이 호출되지 않아야 함
+
+      verify(memberFacade).getMember(memberId);
+      verify(request, never()).toQuestionEntities();
       verify(retroRepository).save(retro);
+      verify(memberRepository, never()).findById(any());
     }
+
 
     @Test
     @DisplayName("실패: 회원이 존재하지 않으면 MEMBER_NOT_FOUND 예외를 던진다.")
@@ -112,14 +129,18 @@ class RetroServiceTest {
       // given
       Long memberId = 1L;
       RetroCreateRequest request = mock(RetroCreateRequest.class);
-      given(memberRepository.findById(memberId)).willReturn(Optional.empty());
+
+      given(memberFacade.getMember(memberId))
+          .willThrow(new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
       // when & then
       assertThatThrownBy(() -> retroService.createRetro(memberId, request))
           .isInstanceOf(BusinessException.class)
           .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MEMBER_NOT_FOUND);
 
+      verify(memberFacade).getMember(memberId);
       verify(retroRepository, never()).save(any());
+      verify(memberRepository, never()).findById(any());
     }
 
     @Nested

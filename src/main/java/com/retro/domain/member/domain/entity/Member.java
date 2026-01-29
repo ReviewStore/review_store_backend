@@ -1,10 +1,19 @@
 package com.retro.domain.member.domain.entity;
 
 import com.retro.global.common.BaseEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Builder.ObtainVia;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -43,12 +52,13 @@ public class Member extends BaseEntity {
   @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
   private Term term;
 
-  public void addTerm(Term term) {
-    this.term = term;
-    term.addMember(this);
-  }
+  @Enumerated(EnumType.STRING)
+  private PostReadPermission postReadPermission;
 
-  @Builder
+  @Column(nullable = false)
+  private int remainingPostReadCount;
+
+  @Builder(access = AccessLevel.PRIVATE)
   private Member(Provider provider, String providerId, String nickname, Term term) {
     this.provider = provider;
     this.providerId = providerId;
@@ -56,6 +66,8 @@ public class Member extends BaseEntity {
     this.term = term;
     this.role = Role.MEMBER;
     this.isPublic = false;
+    this.postReadPermission = PostReadPermission.LIMITED;
+    this.remainingPostReadCount = 5;
   }
 
   public static Member of(Provider provider, String providerId, String nickname, Term term) {
@@ -68,4 +80,28 @@ public class Member extends BaseEntity {
     member.addTerm(term);
     return member;
   }
+
+  public void addTerm(Term term) {
+    this.term = term;
+    term.addMember(this);
+  }
+
+  public void reduceRemainingPostReadCount() {
+    this.remainingPostReadCount--;
+  }
+
+  public void grantPostReadPermission() {
+    this.postReadPermission = PostReadPermission.UNLIMITED;
+  }
+
+  public void closePublicAccessToPost() {
+    this.isPublic = false;
+    this.postReadPermission = PostReadPermission.LIMITED;
+  }
+
+  public boolean hasLimitedPostReadPermission() {
+    return this.postReadPermission.equals(PostReadPermission.LIMITED);
+  }
+
+
 }
