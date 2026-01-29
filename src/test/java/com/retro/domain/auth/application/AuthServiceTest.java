@@ -65,12 +65,7 @@ class AuthServiceTest {
 
     Term term = Term.from(true);
 
-    Member member = Member.builder()
-        .provider(Provider.APPLE)
-        .providerId("exValue")
-        .term(term)
-        .nickname("retro1234")
-        .build();
+    Member member = Member.of(Provider.APPLE, "exValue", "retro1234", term);
 
     ReflectionTestUtils.setField(member, "id", 1L);
 
@@ -156,12 +151,7 @@ class AuthServiceTest {
 
     Term term = Term.from(true);
 
-    Member member = Member.builder()
-        .provider(Provider.APPLE)
-        .providerId("exValue")
-        .term(term)
-        .nickname("retro1234")
-        .build();
+    Member member = Member.of(Provider.APPLE, "exValue", "retro1234", term);
 
     ReflectionTestUtils.setField(member, "id", 1L);
 
