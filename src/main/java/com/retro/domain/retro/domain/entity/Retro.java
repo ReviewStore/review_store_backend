@@ -108,4 +108,8 @@ public class Retro extends BaseEntity {
     this.questions.add(question);
     question.assignToRetro(this);
   }
+
+  public boolean isCreatedByViewer(Long creatorId, Long viewerId) {
+    return creatorId.equals(viewerId);
+  }
 }
