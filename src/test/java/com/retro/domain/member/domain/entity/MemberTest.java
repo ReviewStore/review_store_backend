@@ -10,82 +10,60 @@ import org.junit.jupiter.api.Test;
 class MemberTest {
 
   private Member createMemberFixture() {
-    OAuth2AppleMemberInfo oAuth2AppleMemberInfo = OAuth2AppleMemberInfo.builder()
+    OAuth2AppleMemberInfo info = OAuth2AppleMemberInfo.builder()
         .sub("exValue")
         .provider(Provider.APPLE)
         .build();
 
-    AgreeTermsRequest agreeTermsRequest = new AgreeTermsRequest(
-        "exTempId",
-        true,
-        "retroUser"
-    );
+    AgreeTermsRequest agree = new AgreeTermsRequest("exTempId", true, "retroUser");
+    Term term = Term.from(agree.marketingAgreed());
 
-    Term term = Term.from(agreeTermsRequest.marketingAgreed());
-
-    return Member.of(
-        oAuth2AppleMemberInfo.getProvider(),
-        oAuth2AppleMemberInfo.getSub(),
-        agreeTermsRequest.nickname(),
-        term
-    );
+    return Member.of(info.getProvider(), info.getSub(), agree.nickname(), term);
   }
 
   @Test
   @DisplayName("회원 생성 시 기본값이 올바르게 초기화된다(공개=false, 역할=MEMBER, 제한열람, 잔여횟수=5)")
   void createMember_initialValues() {
-    // when
-    Member createdMember = createMemberFixture();
+    Member member = createMemberFixture();
 
-    // then
-    assertThat(createdMember.getIsPublic()).isFalse();
-    assertThat(createdMember.getRole()).isEqualTo(Role.MEMBER);
-
-    assertThat(createdMember.getPostReadPermission()).isEqualTo(PostReadPermission.LIMITED);
-    assertThat(createdMember.getRemainingPostReadCount()).isEqualTo(5);
-
-    assertThat(createdMember.getTerm()).isNotNull();
-    assertThat(createdMember.getTerm().getMember()).isEqualTo(createdMember);
+    assertThat(member.getIsPublic()).isFalse();
+    assertThat(member.getRole()).isEqualTo(Role.MEMBER);
+    assertThat(member.getPostReadPermission()).isEqualTo(PostReadPermission.LIMITED);
+    assertThat(member.getRemainingPostReadCount()).isEqualTo(5);
+    assertThat(member.getTerm()).isNotNull();
+    assertThat(member.getTerm().getMember()).isEqualTo(member);
   }
 
   @Test
   @DisplayName("열람 횟수를 차감하면 remainingPostReadCount가 1 감소한다")
   void reduceRemainingPostReadCount_decreaseByOne() {
-    // given
     Member member = createMemberFixture();
     int before = member.getRemainingPostReadCount();
 
-    // when
     member.reduceRemainingPostReadCount();
 
-    // then
     assertThat(member.getRemainingPostReadCount()).isEqualTo(before - 1);
   }
 
   @Test
   @DisplayName("무제한 열람 권한을 부여하면 postReadPermission이 UNLIMITED로 변경된다")
   void grantPostReadPermission_setUnlimited() {
-    // given
     Member member = createMemberFixture();
 
-    // when
     member.grantPostReadPermission();
 
-    // then
     assertThat(member.getPostReadPermission()).isEqualTo(PostReadPermission.UNLIMITED);
   }
 
   @Test
-  @DisplayName("closePublicAccessToPost 호출 시 공개 상태는 false, 열람 권한은 LIMITED로 강제된다")
+  @DisplayName("closePublicAccessToPost 호출 시 공개=false, 열람권한=LIMITED로 강제된다")
   void closePublicAccessToPost_forcePrivateAndLimited() {
-    // given
     Member member = createMemberFixture();
-    member.grantPostReadPermission(); // 먼저 무제한으로 만든 상태
+    member.openOwnPublication();
+    member.grantPostReadPermission();
 
-    // when
     member.closePublicAccessToPost();
 
-    // then
     assertThat(member.getIsPublic()).isFalse();
     assertThat(member.getPostReadPermission()).isEqualTo(PostReadPermission.LIMITED);
   }
@@ -93,21 +71,56 @@ class MemberTest {
   @Test
   @DisplayName("LIMITED 권한이면 hasLimitedPostReadPermission이 true를 반환한다")
   void hasLimitedPostReadPermission_trueWhenLimited() {
-    // given
     Member member = createMemberFixture();
-
-    // when & then
     assertThat(member.hasLimitedPostReadPermission()).isTrue();
   }
 
   @Test
   @DisplayName("UNLIMITED 권한이면 hasLimitedPostReadPermission이 false를 반환한다")
   void hasLimitedPostReadPermission_falseWhenUnlimited() {
-    // given
+    Member member = createMemberFixture();
+    member.grantPostReadPermission();
+    assertThat(member.hasLimitedPostReadPermission()).isFalse();
+  }
+
+  @Test
+  @DisplayName("openOwnPublication 호출 시 isPublic이 true가 된다")
+  void openOwnPublication_setPublicTrue() {
+    Member member = createMemberFixture();
+
+    member.openOwnPublication();
+
+    assertThat(member.getIsPublic()).isTrue();
+  }
+
+  @Test
+  @DisplayName("LIMITED + 공개(true)라면 hasLimitedPermissionAndOpenedOwnPublication은 true")
+  void hasLimitedPermissionAndOpenedOwnPublication_true_whenLimitedAndPublic() {
+    Member member = createMemberFixture();
+    member.openOwnPublication();
+
+    assertThat(member.hasLimitedPermissionAndOpenedOwnPublication()).isTrue();
+  }
+
+  @Test
+  @DisplayName("remainingPostReadCount가 0이고 LIMITED면 isPostReadCountExceeded는 true")
+  void isPostReadCountExceeded_true_whenLimitedAndZero() {
+    Member member = createMemberFixture();
+
+    for (int i = 0; i < 5; i++) {
+      member.reduceRemainingPostReadCount();
+    }
+
+    assertThat(member.getRemainingPostReadCount()).isZero();
+    assertThat(member.isPostReadCountExceeded()).isTrue();
+  }
+
+  @Test
+  @DisplayName("remainingPostReadCount가 0이어도 UNLIMITED면 isPostReadCountExceeded는 false")
+  void isPostReadCountExceeded_false_whenUnlimited() {
     Member member = createMemberFixture();
     member.grantPostReadPermission();
 
-    // when & then
-    assertThat(member.hasLimitedPostReadPermission()).isFalse();
+    assertThat(member.isPostReadCountExceeded()).isFalse();
   }
 }

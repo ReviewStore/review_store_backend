@@ -14,6 +14,7 @@ import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.request.QuestionRequest;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
+import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
 import com.retro.domain.retro.domain.entity.Keyword;
 import com.retro.domain.retro.domain.entity.Retro;
@@ -24,6 +25,7 @@ import com.retro.global.common.exception.ErrorCode;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -78,6 +80,7 @@ class RetroServiceTest {
       given(request.questions()).willReturn(questionRequests);
       given(request.toQuestionEntities()).willReturn(questions);
       given(retroRepository.save(any(Retro.class))).willReturn(retro);
+      given(member.hasLimitedPermissionAndOpenedOwnPublication()).willReturn(true);
 
       // when
       Retro result = retroService.createRetro(memberId, request);
@@ -88,6 +91,7 @@ class RetroServiceTest {
       assertThat(result.getQuestions().get(0).getRetro()).isEqualTo(result);
 
       verify(memberFacade).getMember(memberId);
+      verify(memberFacade).grantUnlimitedPostReadPermissionToMember(member);
       verify(retroRepository).save(retro);
 
       // 회원 조회가 Facade로 이동했다면 repository 조회는 호출되면 안 됨
@@ -109,6 +113,7 @@ class RetroServiceTest {
       given(memberFacade.getMember(memberId)).willReturn(member);
       given(request.toEntity(member)).willReturn(retro);
       given(request.questions()).willReturn(Collections.emptyList());
+      given(member.hasLimitedPermissionAndOpenedOwnPublication()).willReturn(true);
 
       // when
       retroService.createRetro(memberId, request);
@@ -119,6 +124,31 @@ class RetroServiceTest {
       verify(memberFacade).getMember(memberId);
       verify(request, never()).toQuestionEntities();
       verify(retroRepository).save(retro);
+      verify(memberRepository, never()).findById(any());
+      verify(memberFacade).grantUnlimitedPostReadPermissionToMember(member);
+
+    }
+
+    @Test
+    @DisplayName("성공: 조건을 만족하지 않으면 무제한 권한 부여 요청을 보내지 않는다")
+    void success_withoutQuestions_and_noGrant_whenConditionFalse() {
+      // given
+      Long memberId = 1L;
+      Member member = mock(Member.class);
+      RetroCreateRequest request = mock(RetroCreateRequest.class);
+      Retro retro = mock(Retro.class);
+
+      given(memberFacade.getMember(memberId)).willReturn(member);
+      given(request.toEntity(member)).willReturn(retro);
+      given(request.questions()).willReturn(Collections.emptyList());
+      given(member.hasLimitedPermissionAndOpenedOwnPublication()).willReturn(false);
+
+      // when
+      retroService.createRetro(memberId, request);
+
+      // then
+      verify(retroRepository).save(retro);
+      verify(memberFacade, never()).grantUnlimitedPostReadPermissionToMember(any());
       verify(memberRepository, never()).findById(any());
     }
 
@@ -143,51 +173,161 @@ class RetroServiceTest {
       verify(memberRepository, never()).findById(any());
     }
 
-    @Nested
-    @DisplayName("키워드 검색(searchKeywords) 테스트")
-    class SearchKeywords {
 
-      @Test
-      @DisplayName("성공: 검색어가 포함된 키워드 목록을 반환한다.")
-      void successSearchKeywords() {
-        // given
-        String searchContent = "데이터";
-        List<Keyword> mockKeywords = List.of(
-            Keyword.of("데이터 분석가", "개발/데이터"),
-            Keyword.of("빅데이터", "개발/데이터")
-        );
+  }
 
-        // keywordRepository가 해당 키워드 리스트를 반환하도록 모킹
-        given(keywordRepository.findAllByContentContaining(searchContent))
-            .willReturn(mockKeywords);
+  @Nested
+  @DisplayName("키워드 검색(searchKeywords) 테스트")
+  class SearchKeywords {
 
-        // when
-        List<KeywordResponse> result = retroService.searchKeywords(searchContent);
+    @Test
+    @DisplayName("성공: 검색어가 포함된 키워드 목록을 반환한다.")
+    void successSearchKeywords() {
+      // given
+      String searchContent = "데이터";
+      List<Keyword> mockKeywords = List.of(
+          Keyword.of("데이터 분석가", "개발/데이터"),
+          Keyword.of("빅데이터", "개발/데이터")
+      );
 
-        // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).name()).isEqualTo("데이터 분석가");
-        assertThat(result.get(0).category()).isEqualTo("개발/데이터");
-        assertThat(result.get(1).name()).isEqualTo("빅데이터");
+      // keywordRepository가 해당 키워드 리스트를 반환하도록 모킹
+      given(keywordRepository.findAllByContentContaining(searchContent))
+          .willReturn(mockKeywords);
 
-        verify(keywordRepository).findAllByContentContaining(searchContent);
-      }
+      // when
+      List<KeywordResponse> result = retroService.searchKeywords(searchContent);
 
-      @Test
-      @DisplayName("성공: 검색 결과가 없는 경우 빈 리스트를 반환한다.")
-      void successSearchKeywordsWithEmptyResult() {
-        // given
-        String searchContent = "존재하지않는키워드";
-        given(keywordRepository.findAllByContentContaining(searchContent))
-            .willReturn(List.of());
+      // then
+      assertThat(result).hasSize(2);
+      assertThat(result.get(0).name()).isEqualTo("데이터 분석가");
+      assertThat(result.get(0).category()).isEqualTo("개발/데이터");
+      assertThat(result.get(1).name()).isEqualTo("빅데이터");
 
-        // when
-        List<KeywordResponse> result = retroService.searchKeywords(searchContent);
+      verify(keywordRepository).findAllByContentContaining(searchContent);
+    }
 
-        // then
-        assertThat(result).isEmpty();
-        verify(keywordRepository).findAllByContentContaining(searchContent);
-      }
+    @Test
+    @DisplayName("성공: 검색 결과가 없는 경우 빈 리스트를 반환한다.")
+    void successSearchKeywordsWithEmptyResult() {
+      // given
+      String searchContent = "존재하지않는키워드";
+      given(keywordRepository.findAllByContentContaining(searchContent))
+          .willReturn(List.of());
+
+      // when
+      List<KeywordResponse> result = retroService.searchKeywords(searchContent);
+
+      // then
+      assertThat(result).isEmpty();
+      verify(keywordRepository).findAllByContentContaining(searchContent);
     }
   }
+
+
+  @Nested
+  @DisplayName("회고 상세 조회(getRetro)")
+  class GetRetro {
+
+    @Test
+    @DisplayName("실패: 회고가 없으면 RETRO_NOT_FOUND")
+    void fail_retroNotFound() {
+      // given
+      Long viewerId = 1L;
+      Long retroId = 999L;
+
+      Member viewer = mock(Member.class);
+      given(memberFacade.getMember(viewerId)).willReturn(viewer);
+      given(retroRepository.findById(retroId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> retroService.getRetro(viewerId, retroId))
+          .isInstanceOf(BusinessException.class)
+          .hasFieldOrPropertyWithValue("errorCode", ErrorCode.RETRO_NOT_FOUND);
+
+      verify(viewer, never()).reduceRemainingPostReadCount();
+    }
+
+    @Test
+    @DisplayName("성공: 본인 글이면 차감 없이 조회된다")
+    void success_owner_noConsume() {
+      // given
+      Long viewerId = 1L;
+      Long retroId = 10L;
+
+      Member viewer = mock(Member.class);
+      Retro retro = mock(Retro.class);
+      Member author = mock(Member.class);
+
+      given(memberFacade.getMember(viewerId)).willReturn(viewer);
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+      given(retro.getMember()).willReturn(author);
+      given(author.getId()).willReturn(viewerId);
+
+      given(retro.isCreatedByViewer(viewerId, viewerId)).willReturn(true);
+
+      // when
+      RetroDetailResponse response = retroService.getRetro(viewerId, retroId);
+
+      // then
+      assertThat(response).isNotNull();
+      verify(viewer, never()).isPostReadCountExceeded();
+      verify(viewer, never()).reduceRemainingPostReadCount();
+    }
+
+    @Test
+    @DisplayName("실패: 타인 글 + 잔여 0이면 예외 발생, 차감하지 않는다")
+    void fail_other_and_exceeded() {
+      // given
+      Long viewerId = 2L;
+      Long retroId = 10L;
+
+      Member viewer = mock(Member.class);
+      Retro retro = mock(Retro.class);
+      Member author = mock(Member.class);
+
+      given(memberFacade.getMember(viewerId)).willReturn(viewer);
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+      given(retro.getMember()).willReturn(author);
+      given(author.getId()).willReturn(1L);
+
+      given(retro.isCreatedByViewer(1L, viewerId)).willReturn(false);
+      given(viewer.isPostReadCountExceeded()).willReturn(true);
+
+      // when & then
+      assertThatThrownBy(() -> retroService.getRetro(viewerId, retroId))
+          .isInstanceOf(BusinessException.class)
+          .hasFieldOrPropertyWithValue("errorCode", ErrorCode.RETRO_READ_POINT_EXCEEDED);
+
+      verify(viewer, never()).reduceRemainingPostReadCount();
+    }
+
+    @Test
+    @DisplayName("성공: 타인 글 + 잔여 남음이면 1회 차감 후 조회된다")
+    void success_other_and_consume() {
+      // given
+      Long viewerId = 2L;
+      Long retroId = 10L;
+
+      Member viewer = mock(Member.class);
+      Retro retro = mock(Retro.class);
+      Member author = mock(Member.class);
+
+      given(memberFacade.getMember(viewerId)).willReturn(viewer);
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+      given(retro.getMember()).willReturn(author);
+      given(author.getId()).willReturn(1L);
+
+      given(retro.isCreatedByViewer(1L, viewerId)).willReturn(false);
+      given(viewer.isPostReadCountExceeded()).willReturn(false);
+
+      // when
+      RetroDetailResponse response = retroService.getRetro(viewerId, retroId);
+
+      // then
+      assertThat(response).isNotNull();
+      verify(viewer).reduceRemainingPostReadCount();
+    }
+  }
+
+
 }

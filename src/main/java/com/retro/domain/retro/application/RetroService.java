@@ -5,10 +5,13 @@ import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
+import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
 import com.retro.domain.retro.domain.entity.Retro;
 import com.retro.domain.retro.domain.repository.KeywordRepository;
 import com.retro.domain.retro.domain.repository.RetroRepository;
+import com.retro.global.common.exception.BusinessException;
+import com.retro.global.common.exception.ErrorCode;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +48,7 @@ public class RetroService {
     retroRepository.save(retro);
 
     // 4. 회원의 게시물 공개 여부 조회 & 열람권 무제한 부여 여부 검증
-    if (member.hasLimitedPostReadPermission()) {
+    if (member.hasLimitedPermissionAndOpenedOwnPublication()) {
       memberFacade.grantUnlimitedPostReadPermissionToMember(member);
     }
 
@@ -63,5 +66,22 @@ public class RetroService {
         .collect(Collectors.toList());
   }
 
+  @Transactional
+  public RetroDetailResponse getRetro(Long viewerId, Long retroId) {
+    Member viewer = memberFacade.getMember(viewerId);
 
+    Retro retro = retroRepository.findById(retroId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.RETRO_NOT_FOUND));
+
+    Long authorId = retro.getMember().getId();
+
+    if (retro.isCreatedByViewer(authorId, viewerId)) {
+      return RetroDetailResponse.from(retro);
+    }
+    if (viewer.isPostReadCountExceeded()) {
+      throw new BusinessException(ErrorCode.RETRO_READ_POINT_EXCEEDED);
+    }
+    viewer.reduceRemainingPostReadCount();
+    return RetroDetailResponse.from(retro);
+  }
 }

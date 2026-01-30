@@ -103,5 +103,19 @@ public class Member extends BaseEntity {
     return this.postReadPermission.equals(PostReadPermission.LIMITED);
   }
 
+  public void openOwnPublication() {
+    this.isPublic = true;
+  }
+
+  public boolean hasLimitedPermissionAndOpenedOwnPublication() {
+    return this.hasLimitedPostReadPermission()
+        && this.isPublic;
+  }
+
+  public boolean isPostReadCountExceeded() {
+    return this.postReadPermission.equals(PostReadPermission.LIMITED)
+        && this.remainingPostReadCount == 0;
+  }
+
 
 }

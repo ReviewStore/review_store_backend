@@ -45,11 +45,11 @@ public class InterviewQuestion {
 
   private String interviewerReaction;
 
-  private Integer satisfactionScore;
+  private int satisfactionScore;
 
   @Builder(access = AccessLevel.PRIVATE)
   private InterviewQuestion(int questionOrder, String questionType, String questionText,
-      String answerText, String interviewerReaction, Integer satisfactionScore) {
+      String answerText, String interviewerReaction, int satisfactionScore) {
     this.questionOrder = questionOrder;
     this.questionType = questionType;
     this.questionText = questionText;
