@@ -1,10 +1,11 @@
 package com.retro.global.common.exception;
 
+import com.retro.domain.member.application.exception.MemberNotRegisteredException;
 import com.retro.global.common.dto.ErrorResponse;
-import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -18,7 +19,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     protected ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
         log.error("BusinessException: {}", e.getMessage());
+        if (StringUtils.hasText(e.getMessage())) {
+            ErrorResponse response = ErrorResponse.of(e.getErrorCode(), e.getMessage());
+            return ResponseEntity
+                .status(e.getErrorCode().getStatus())
+                .body(response);
+        }
         ErrorResponse response = ErrorResponse.of(e.getErrorCode());
+        return ResponseEntity
+            .status(e.getErrorCode().getStatus())
+            .body(response);
+    }
+
+    @ExceptionHandler(MemberNotRegisteredException.class)
+    protected ResponseEntity<ErrorResponse> handleMemberNotRegisteredException(
+        MemberNotRegisteredException e
+    ) {
+        // tempId를 data에 담아서 반환
+        Map<String, String> data = Map.of("tempId", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(e.getErrorCode(), data);
+
         return ResponseEntity
             .status(e.getErrorCode().getStatus())
             .body(response);
@@ -32,21 +52,5 @@ public class GlobalExceptionHandler {
         log.error("Unexpected Error: ", e);
         ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_TOKEN);
         return ResponseEntity.internalServerError().body(response);
-    }
-
-    /**
-     * @Valid 검증 실패 예외 처리
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
-        MethodArgumentNotValidException e) {
-        log.error("Validation Error: {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.builder()
-            .status(400)
-            .code("COMMON-9001")
-            .message(e.getBindingResult().getAllErrors().get(0).getDefaultMessage())
-            .timestamp(LocalDateTime.now())
-            .build();
-        return ResponseEntity.badRequest().body(response);
     }
 }
