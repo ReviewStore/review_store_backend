@@ -54,20 +54,7 @@ class MemberTest {
 
     assertThat(member.getPostReadPermission()).isEqualTo(PostReadPermission.UNLIMITED);
   }
-
-  @Test
-  @DisplayName("closePublicAccessToPost 호출 시 공개=false, 열람권한=LIMITED로 강제된다")
-  void closePublicAccessToPost_forcePrivateAndLimited() {
-    Member member = createMemberFixture();
-    member.openOwnPublication();
-    member.grantPostReadPermission();
-
-    member.closePublicAccessToPost();
-
-    assertThat(member.getIsPublic()).isFalse();
-    assertThat(member.getPostReadPermission()).isEqualTo(PostReadPermission.LIMITED);
-  }
-
+  
   @Test
   @DisplayName("LIMITED 권한이면 hasLimitedPostReadPermission이 true를 반환한다")
   void hasLimitedPostReadPermission_trueWhenLimited() {
@@ -91,6 +78,16 @@ class MemberTest {
     member.openOwnPublication();
 
     assertThat(member.getIsPublic()).isTrue();
+  }
+
+  @Test
+  @DisplayName("closeOwnPublication 호출 시 isPublic이 false가 된다")
+  void closeOwnPublication_setPublicTrue() {
+    Member member = createMemberFixture();
+
+    member.closeOwnPublication();
+
+    assertThat(member.getIsPublic()).isFalse();
   }
 
   @Test
