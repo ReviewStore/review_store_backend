@@ -26,4 +26,14 @@ public class MemberService {
   public void grantUnlimitedPostReadPermissionToMember(Member member) {
     member.grantPostReadPermission();
   }
+
+  @Transactional
+  public void updatePostPublicStatus(Long memberId, boolean isPublic) {
+    Member member = getMember(memberId);
+    if (isPublic) {
+      member.openOwnPublication();
+      return;
+    }
+    member.closeOwnPublication();
+  }
 }

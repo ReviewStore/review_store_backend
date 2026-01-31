@@ -94,17 +94,19 @@ public class Member extends BaseEntity {
     this.postReadPermission = PostReadPermission.UNLIMITED;
   }
 
-  public void closePublicAccessToPost() {
-    this.isPublic = false;
-    this.postReadPermission = PostReadPermission.LIMITED;
-  }
-
   public boolean hasLimitedPostReadPermission() {
     return this.postReadPermission.equals(PostReadPermission.LIMITED);
   }
 
   public void openOwnPublication() {
     this.isPublic = true;
+  }
+
+  public void closeOwnPublication() {
+    this.isPublic = false;
+    if (this.postReadPermission.equals(PostReadPermission.UNLIMITED)) {
+      this.postReadPermission = PostReadPermission.LIMITED;
+    }
   }
 
   public boolean hasLimitedPermissionAndOpenedOwnPublication() {

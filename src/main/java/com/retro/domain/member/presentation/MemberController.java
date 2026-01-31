@@ -1,7 +1,13 @@
 package com.retro.domain.member.presentation;
 
 import com.retro.domain.member.application.MemberService;
+import com.retro.domain.member.application.dto.MemberPublicUpdateRequest;
+import com.retro.global.common.dto.ApiResponse;
+import com.retro.global.common.utils.SecurityUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -9,9 +15,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/members")
 @RequiredArgsConstructor
 public class MemberController {
+
   private final MemberService memberService;
+  private final SecurityUtil securityUtil;
 
 
-
-
+  @PatchMapping("/public")
+  public ApiResponse<Void> updatePostPublicStatus(
+      @RequestBody @Valid MemberPublicUpdateRequest request
+  ) {
+    memberService.updatePostPublicStatus(securityUtil.getAuthenticatedUserId(), request.isPublic());
+    return ApiResponse.success();
+  }
 }
