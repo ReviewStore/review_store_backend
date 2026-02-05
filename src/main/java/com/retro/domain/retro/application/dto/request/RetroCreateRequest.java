@@ -1,6 +1,5 @@
 package com.retro.domain.retro.application.dto.request;
 
-import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
 import com.retro.domain.retro.domain.entity.Retro;
 import jakarta.annotation.Nullable;
@@ -41,8 +40,8 @@ public record RetroCreateRequest(
         questions);
   }
 
-  public Retro toEntity(Member member) {
-    return Retro.of(member, companyName, position, interviewDate, interviewRound,
+  public Retro toEntity(Long memberId) {
+    return Retro.of(memberId, companyName, position, interviewDate, interviewRound,
         interviewTags, keepText, problemText, tryText, summary);
   }
 

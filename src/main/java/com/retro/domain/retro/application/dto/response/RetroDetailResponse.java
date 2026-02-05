@@ -27,7 +27,7 @@ public record RetroDetailResponse(
     if (CollectionUtils.isEmpty(retro.getQuestions())) {
       return new RetroDetailResponse(
           retro.getRetroId(),
-          retro.getMember().getId(),
+          retro.getMemberId(),
           retro.getCompanyName(),
           retro.getPosition(),
           retro.getInterviewDate(),
@@ -48,7 +48,7 @@ public record RetroDetailResponse(
 
     return new RetroDetailResponse(
         retro.getRetroId(),
-        retro.getMember().getId(),
+        retro.getMemberId(),
         retro.getCompanyName(),
         retro.getPosition(),
         retro.getInterviewDate(),

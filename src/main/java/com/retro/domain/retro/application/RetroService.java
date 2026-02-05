@@ -3,6 +3,7 @@ package com.retro.domain.retro.application;
 import com.retro.domain.member.application.MemberFacade;
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
+import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
@@ -36,7 +37,7 @@ public class RetroService {
     Member member = memberFacade.getMember(memberId);
 
     // 1. DTO를 통해 애그리거트 루트(Retro) 생성
-    Retro retro = request.toEntity(member);
+    Retro retro = request.toEntity(member.getId());
 
     // 2. 하위 질문 DTO들을 엔티티로 변환하여 루트에 추가
     if (isNotEmptyQuestions(request)) {
@@ -73,7 +74,7 @@ public class RetroService {
     Retro retro = retroRepository.findById(retroId)
         .orElseThrow(() -> new BusinessException(ErrorCode.RETRO_NOT_FOUND));
 
-    Long authorId = retro.getMember().getId();
+    Long authorId = retro.getMemberId();
 
     if (retro.isCreatedByViewer(authorId, viewerId)) {
       return RetroDetailResponse.from(retro);
@@ -83,5 +84,39 @@ public class RetroService {
     }
     viewer.reduceRemainingPostReadCount();
     return RetroDetailResponse.from(retro);
+  }
+
+  public RetroCursorPageResponse getMyRetros(Long memberId, Long cursorId, int size) {
+    Member member = memberFacade.getMember(memberId);
+    List<Retro> retros = getMyRetros(cursorId, size, member);
+    boolean hasNext = hasMoreRetros(size, retros);
+    if (hasNext) {
+      retros = sliceRetros(size, retros);
+    }
+    List<RetroDetailResponse> responses = retros.stream()
+        .map(RetroDetailResponse::from)
+        .toList();
+
+    Long nextCursor = getNextCursor(hasNext, retros);
+
+    return RetroCursorPageResponse.of(responses, nextCursor, hasNext);
+  }
+
+  private List<Retro> getMyRetros(Long cursorId, int size, Member member) {
+    final int pageSizePlusOne = size + 1;
+    return retroRepository.findByMemberIdWithCursor(member.getId(), cursorId,
+        pageSizePlusOne);
+  }
+
+  private Long getNextCursor(boolean hasNext, List<Retro> retros) {
+    return hasNext ? retros.getLast().getRetroId() : null;
+  }
+
+  private List<Retro> sliceRetros(int size, List<Retro> retros) {
+    return retros.subList(0, size);
+  }
+
+  private boolean hasMoreRetros(int size, List<Retro> retros) {
+    return retros.size() > size;
   }
 }

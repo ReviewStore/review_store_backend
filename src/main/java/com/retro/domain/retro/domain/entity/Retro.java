@@ -1,16 +1,12 @@
 package com.retro.domain.retro.domain.entity;
 
-import com.retro.domain.member.domain.entity.Member;
 import com.retro.global.common.BaseEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
@@ -20,8 +16,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Getter
@@ -33,10 +27,8 @@ public class Retro extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long retroId;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id", nullable = false)
-  @OnDelete(action = OnDeleteAction.CASCADE)
-  private Member member;
+  @Column(nullable = false)
+  private Long memberId;
 
   @Column(nullable = false, length = 100)
   private String companyName;
@@ -67,10 +59,10 @@ public class Retro extends BaseEntity {
   private List<InterviewQuestion> questions = new ArrayList<>();
 
   @Builder(access = AccessLevel.PRIVATE)
-  private Retro(Member member, String companyName, String position, LocalDate interviewDate,
+  private Retro(Long memberId, String companyName, String position, LocalDate interviewDate,
       String interviewRound, String interviewTags, String keepText,
       String problemText, String tryText, String summary) {
-    this.member = member;
+    this.memberId = memberId;
     this.companyName = companyName;
     this.position = position;
     this.interviewDate = interviewDate;
@@ -82,12 +74,12 @@ public class Retro extends BaseEntity {
     this.summary = summary;
   }
 
-  public static Retro of(Member member, String companyName, String position,
+  public static Retro of(Long memberId, String companyName, String position,
       LocalDate interviewDate,
       String interviewRound, String interviewTags, String keepText,
       String problemText, String tryText, String summary) {
     return Retro.builder()
-        .member(member)
+        .memberId(memberId)
         .companyName(companyName)
         .position(position)
         .interviewDate(interviewDate)
