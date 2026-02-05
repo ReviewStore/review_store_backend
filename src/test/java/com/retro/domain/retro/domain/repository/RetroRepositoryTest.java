@@ -34,7 +34,8 @@ class RetroRepositoryTest {
   void cascadePersistTest() {
     // given
     Member member = createAndSaveMember();
-    Retro retro = Retro.of(member, "카카오", "백엔드", LocalDate.now(), "1차", "#기술", "K", "P", "T", "요약");
+    Retro retro = Retro.of(member.getId(), "카카오", "백엔드", LocalDate.now(), "1차", "#기술", "K", "P",
+        "T", "요약");
 
     InterviewQuestion question = InterviewQuestion.of(1, "직무", "JVM", "답", "상", 5);
     retro.addQuestion(question);
@@ -55,7 +56,8 @@ class RetroRepositoryTest {
   void orphanRemovalTest() {
     // given
     Member member = createAndSaveMember();
-    Retro retro = Retro.of(member, "네이버", "FE", LocalDate.now(), "2차", "#JS", "K", "P", "T", "요약");
+    Retro retro = Retro.of(member.getId(), "네이버", "FE", LocalDate.now(), "2차", "#JS", "K", "P", "T",
+        "요약");
     retro.addQuestion(InterviewQuestion.of(1, "공통", "자기소개", "답", "상", 5));
     retroRepository.save(retro);
     em.flush();
@@ -77,7 +79,8 @@ class RetroRepositoryTest {
   void cascadeRemoveTest() {
     // given
     Member member = createAndSaveMember();
-    Retro retro = Retro.of(member, "라인", "iOS", LocalDate.now(), "1차", "#Swift", "K", "P", "T",
+    Retro retro = Retro.of(member.getId(), "라인", "iOS", LocalDate.now(), "1차", "#Swift", "K", "P",
+        "T",
         "요약");
     retro.addQuestion(InterviewQuestion.of(1, "기술", "ARC란?", "답", "상", 5));
     retroRepository.save(retro);

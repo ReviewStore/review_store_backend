@@ -1,6 +1,7 @@
 package com.retro.domain.retro.presentation;
 
 import com.retro.domain.retro.application.RetroService;
+import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroCreateResponse;
@@ -45,6 +46,15 @@ public class RetroController {
   public ApiResponse<RetroDetailResponse> getRetro(@PathVariable Long retroId) {
     Long viewerId = securityUtil.getAuthenticatedUserId();
     RetroDetailResponse response = retroService.getRetro(viewerId, retroId);
+    return ApiResponse.success(response);
+  }
+
+  @GetMapping("/my-retros")
+  public ApiResponse<RetroCursorPageResponse> getMyRetros(
+      @RequestParam(required = false) Long cursorId,
+      @RequestParam(defaultValue = "20") int size) {
+    Long memberId = securityUtil.getAuthenticatedUserId();
+    RetroCursorPageResponse response = retroService.getMyRetros(memberId, cursorId, size);
     return ApiResponse.success(response);
   }
 }

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import com.retro.domain.member.application.MemberFacade;
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
+import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.QuestionRequest;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class RetroServiceTest {
@@ -68,7 +70,7 @@ class RetroServiceTest {
           QuestionRequest.of(1, "기술", "JVM이란?", "답변", "좋음", 5)
       );
 
-      Retro retro = Retro.of(member, "카카오", "백엔드", LocalDate.now(), "1차", "#Java", "K", "P", "T",
+      Retro retro = Retro.of(memberId, "카카오", "백엔드", LocalDate.now(), "1차", "#Java", "K", "P", "T",
           "요약");
 
       List<InterviewQuestion> questions = List.of(
@@ -76,7 +78,8 @@ class RetroServiceTest {
       );
 
       given(memberFacade.getMember(memberId)).willReturn(member);
-      given(request.toEntity(member)).willReturn(retro);
+      given(member.getId()).willReturn(memberId);
+      given(request.toEntity(memberId)).willReturn(retro);
       given(request.questions()).willReturn(questionRequests);
       given(request.toQuestionEntities()).willReturn(questions);
       given(retroRepository.save(any(Retro.class))).willReturn(retro);
@@ -107,11 +110,12 @@ class RetroServiceTest {
       Member member = mock(Member.class);
       RetroCreateRequest request = mock(RetroCreateRequest.class);
 
-      Retro retro = Retro.of(member, "네이버", "FE", LocalDate.now(), "2차", "#React", "K", "P", "T",
+      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "2차", "#React", "K", "P", "T",
           "요약");
 
+      given(member.getId()).willReturn(memberId);
       given(memberFacade.getMember(memberId)).willReturn(member);
-      given(request.toEntity(member)).willReturn(retro);
+      given(request.toEntity(memberId)).willReturn(retro);
       given(request.questions()).willReturn(Collections.emptyList());
       given(member.hasLimitedPermissionAndOpenedOwnPublication()).willReturn(true);
 
@@ -138,8 +142,9 @@ class RetroServiceTest {
       RetroCreateRequest request = mock(RetroCreateRequest.class);
       Retro retro = mock(Retro.class);
 
+      given(member.getId()).willReturn(memberId);
       given(memberFacade.getMember(memberId)).willReturn(member);
-      given(request.toEntity(member)).willReturn(retro);
+      given(request.toEntity(memberId)).willReturn(retro);
       given(request.questions()).willReturn(Collections.emptyList());
       given(member.hasLimitedPermissionAndOpenedOwnPublication()).willReturn(false);
 
@@ -223,7 +228,6 @@ class RetroServiceTest {
     }
   }
 
-
   @Nested
   @DisplayName("회고 상세 조회(getRetro)")
   class GetRetro {
@@ -253,16 +257,14 @@ class RetroServiceTest {
       // given
       Long viewerId = 1L;
       Long retroId = 10L;
+      Long authorId = 1L;
 
       Member viewer = mock(Member.class);
       Retro retro = mock(Retro.class);
-      Member author = mock(Member.class);
 
       given(memberFacade.getMember(viewerId)).willReturn(viewer);
       given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
-      given(retro.getMember()).willReturn(author);
-      given(author.getId()).willReturn(viewerId);
-
+      given(retro.getMemberId()).willReturn(authorId);
       given(retro.isCreatedByViewer(viewerId, viewerId)).willReturn(true);
 
       // when
@@ -280,17 +282,15 @@ class RetroServiceTest {
       // given
       Long viewerId = 2L;
       Long retroId = 10L;
+      Long authorId = 3L;
 
       Member viewer = mock(Member.class);
       Retro retro = mock(Retro.class);
-      Member author = mock(Member.class);
 
       given(memberFacade.getMember(viewerId)).willReturn(viewer);
       given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
-      given(retro.getMember()).willReturn(author);
-      given(author.getId()).willReturn(1L);
-
-      given(retro.isCreatedByViewer(1L, viewerId)).willReturn(false);
+      given(retro.getMemberId()).willReturn(authorId);
+      given(retro.isCreatedByViewer(authorId, viewerId)).willReturn(false);
       given(viewer.isPostReadCountExceeded()).willReturn(true);
 
       // when & then
@@ -307,17 +307,15 @@ class RetroServiceTest {
       // given
       Long viewerId = 2L;
       Long retroId = 10L;
+      Long authorId = 3L;
 
       Member viewer = mock(Member.class);
       Retro retro = mock(Retro.class);
-      Member author = mock(Member.class);
 
       given(memberFacade.getMember(viewerId)).willReturn(viewer);
       given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
-      given(retro.getMember()).willReturn(author);
-      given(author.getId()).willReturn(1L);
-
-      given(retro.isCreatedByViewer(1L, viewerId)).willReturn(false);
+      given(retro.getMemberId()).willReturn(authorId);
+      given(retro.isCreatedByViewer(authorId, viewerId)).willReturn(false);
       given(viewer.isPostReadCountExceeded()).willReturn(false);
 
       // when
@@ -326,6 +324,79 @@ class RetroServiceTest {
       // then
       assertThat(response).isNotNull();
       verify(viewer).reduceRemainingPostReadCount();
+    }
+  }
+
+  @Nested
+  @DisplayName("내 회고 목록 조회(getMyRetros)")
+  class GetMyRetros {
+
+    @Test
+    @DisplayName("성공: size+1 조회 시 다음 커서와 hasNext=true 반환")
+    void success_hasNext() {
+      // given
+      Long memberId = 1L;
+      Long cursorId = null;
+      int size = 2;
+      Member member = mock(Member.class);
+
+      Retro retro1 = Retro.of(memberId, "네이버1", "FE", LocalDate.now(), "2차", "#React", "K", "P",
+          "T",
+          "요약");
+      Retro retro2 = Retro.of(memberId, "네이버2", "FE", LocalDate.now(), "2차", "#React", "K", "P",
+          "T",
+          "요약");
+      Retro retro3 = Retro.of(memberId, "네이버3", "FE", LocalDate.now(), "2차", "#React", "K", "P",
+          "T",
+          "요약");
+      ReflectionTestUtils.setField(retro1, "retroId", 1L);
+      ReflectionTestUtils.setField(retro2, "retroId", 2L);
+      ReflectionTestUtils.setField(retro3, "retroId", 3L);
+
+      given(memberFacade.getMember(memberId)).willReturn(member);
+      given(member.getId()).willReturn(memberId);
+      given(retroRepository.findByMemberIdWithCursor(memberId, cursorId, size + 1))
+          .willReturn(List.of(retro1, retro2, retro3));
+
+      // when
+      RetroCursorPageResponse response = retroService.getMyRetros(memberId, cursorId, size);
+
+      // then
+      assertThat(response.retros()).hasSize(2);
+      assertThat(response.hasNext()).isTrue();
+      assertThat(response.nextCursor()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("성공: 추가 데이터가 없으면 hasNext=false 및 nextCursor=null 반환")
+    void success_noNext() {
+      // given
+      Long memberId = 1L;
+      Long cursorId = 5L;
+      int size = 3;
+      Member member = mock(Member.class);
+
+      Retro retro1 = Retro.of(memberId, "네이버1", "FE", LocalDate.now(), "2차", "#React", "K", "P",
+          "T",
+          "요약");
+      Retro retro2 = Retro.of(memberId, "네이버2", "FE", LocalDate.now(), "2차", "#React", "K", "P",
+          "T",
+          "요약");
+      ReflectionTestUtils.setField(retro1, "retroId", 1L);
+      ReflectionTestUtils.setField(retro2, "retroId", 2L);
+
+      given(memberFacade.getMember(memberId)).willReturn(member);
+      given(member.getId()).willReturn(memberId);
+      given(retroRepository.findByMemberIdWithCursor(memberId, cursorId, size + 1))
+          .willReturn(List.of(retro1, retro2));
+
+      // when
+      RetroCursorPageResponse response = retroService.getMyRetros(memberId, cursorId, size);
+
+      // then
+      assertThat(response.retros()).hasSize(2);
+      assertThat(response.hasNext()).isFalse();
+      assertThat(response.nextCursor()).isNull();
     }
   }
 

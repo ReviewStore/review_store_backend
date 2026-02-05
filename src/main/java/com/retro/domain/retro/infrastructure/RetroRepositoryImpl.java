@@ -3,6 +3,7 @@ package com.retro.domain.retro.infrastructure;
 import com.retro.domain.retro.domain.entity.Retro;
 import com.retro.domain.retro.domain.repository.RetroRepository;
 import com.retro.domain.retro.infrastructure.jpa.RetroJPARepository;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 public class RetroRepositoryImpl implements RetroRepository {
 
   private final RetroJPARepository retroJPARepository;
+  private final RetroRepositoryCustom retroRepositoryCustom;
 
   @Override
   public Retro save(Retro retro) {
@@ -21,6 +23,11 @@ public class RetroRepositoryImpl implements RetroRepository {
   @Override
   public Optional<Retro> findById(Long retroId) {
     return retroJPARepository.findById(retroId);
+  }
+
+  @Override
+  public List<Retro> findByMemberIdWithCursor(Long memberId, Long cursorId, int size) {
+    return retroRepositoryCustom.findByMemberIdWithCursor(memberId, cursorId, size);
   }
 
   @Override
