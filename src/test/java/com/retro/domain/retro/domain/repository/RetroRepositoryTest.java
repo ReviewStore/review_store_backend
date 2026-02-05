@@ -9,7 +9,9 @@ import com.retro.domain.member.domain.entity.Term;
 import com.retro.domain.member.infrastructure.MemberRepositoryImpl;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
 import com.retro.domain.retro.domain.entity.Retro;
+import com.retro.domain.retro.infrastructure.RetroRepositoryCustomImpl;
 import com.retro.domain.retro.infrastructure.RetroRepositoryImpl;
+import com.retro.global.config.QuerydslConfig;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +21,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 @DataJpaTest
-@Import({RetroRepositoryImpl.class, MemberRepositoryImpl.class})
+@Import({RetroRepositoryImpl.class, MemberRepositoryImpl.class, RetroRepositoryCustomImpl.class,
+    QuerydslConfig.class})
 class RetroRepositoryTest {
 
   @Autowired
