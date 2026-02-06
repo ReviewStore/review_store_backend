@@ -57,4 +57,19 @@ class MemberServiceTest {
     assertThat(member.getIsPublic()).isFalse();
     assertThat(member.getPostReadPermission()).isEqualTo(PostReadPermission.LIMITED);
   }
+
+  @Test
+  @DisplayName("성공: 닉네임 변경 요청 시 닉네임이 업데이트된다.")
+  void updateNickname() {
+    // given
+    Long memberId = 1L;
+    Member member = Member.of(Provider.GOOGLE, "google-123", "기존닉네임", Term.from(true));
+    given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
+
+    // when
+    memberService.updateNickname(memberId, "새닉네임1");
+
+    // then
+    assertThat(member.getNickname()).isEqualTo("새닉네임1");
+  }
 }

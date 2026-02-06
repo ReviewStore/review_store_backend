@@ -119,5 +119,9 @@ public class Member extends BaseEntity {
         && this.remainingPostReadCount == 0;
   }
 
+  public void updateNickname(String nickname) {
+    this.nickname = nickname;
+  }
+
 
 }

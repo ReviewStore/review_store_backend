@@ -36,4 +36,10 @@ public class MemberService {
     }
     member.closeOwnPublication();
   }
+
+  @Transactional
+  public void updateNickname(Long memberId, String nickname) {
+    Member member = getMember(memberId);
+    member.updateNickname(nickname);
+  }
 }

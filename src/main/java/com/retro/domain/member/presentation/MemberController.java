@@ -1,6 +1,7 @@
 package com.retro.domain.member.presentation;
 
 import com.retro.domain.member.application.MemberService;
+import com.retro.domain.member.application.dto.MemberNicknameUpdateRequest;
 import com.retro.domain.member.application.dto.MemberPublicUpdateRequest;
 import com.retro.global.common.dto.ApiResponse;
 import com.retro.global.common.utils.SecurityUtil;
@@ -25,6 +26,14 @@ public class MemberController {
       @RequestBody @Valid MemberPublicUpdateRequest request
   ) {
     memberService.updatePostPublicStatus(securityUtil.getAuthenticatedUserId(), request.isPublic());
+    return ApiResponse.success();
+  }
+
+  @PatchMapping("/nickname")
+  public ApiResponse<Void> updateNickname(
+      @RequestBody @Valid MemberNicknameUpdateRequest request
+  ) {
+    memberService.updateNickname(securityUtil.getAuthenticatedUserId(), request.nickname());
     return ApiResponse.success();
   }
 }
