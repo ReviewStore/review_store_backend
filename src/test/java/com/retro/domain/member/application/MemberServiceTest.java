@@ -99,4 +99,34 @@ class MemberServiceTest {
     verify(memberRepository).delete(member);
     verify(memberEventPublisher).publishMemberWithdrawnEvent(any(Member.class));
   }
+
+  @Test
+  @DisplayName("성공: 마케팅 약관 동의 변경 요청 시 약관 정보가 업데이트된다.")
+  void updateMarketingAgreed() {
+    // given
+    Long memberId = 1L;
+    Member member = Member.of(Provider.GOOGLE, "google-123", "닉네임", Term.from(true));
+    given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
+
+    // when
+    memberService.updateMarketingAgreed(memberId, false);
+
+    // then
+    assertThat(member.getTerm().isMarketingAgreed()).isFalse();
+  }
+
+  @Test
+  @DisplayName("성공: 서비스 약관 동의 변경 요청 시 약관 정보가 업데이트된다.")
+  void updateServiceTermAgreed() {
+    // given
+    Long memberId = 1L;
+    Member member = Member.of(Provider.GOOGLE, "google-123", "닉네임", Term.from(true));
+    given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
+
+    // when
+    memberService.updateServiceTermAgreed(memberId, false);
+
+    // then
+    assertThat(member.getTerm().isServiceTermAgreed()).isFalse();
+  }
 }

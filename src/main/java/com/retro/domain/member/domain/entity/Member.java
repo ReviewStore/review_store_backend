@@ -125,5 +125,15 @@ public class Member extends BaseEntity {
     this.nickname = nickname;
   }
 
+  public void updateMarketingTermAgreed(
+      boolean marketingTermAgreed) {
+    this.term.updateMarketingAgreed(marketingTermAgreed);
+  }
+
+  public void updateServiceTermAgreed(
+      boolean serviceTermAgreed) {
+    this.term.updateServiceTermAgreed(serviceTermAgreed);
+  }
+
 
 }

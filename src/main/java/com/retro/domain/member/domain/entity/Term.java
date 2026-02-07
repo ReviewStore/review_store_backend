@@ -8,16 +8,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Term {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -34,10 +32,6 @@ public class Term {
 
   private boolean marketingAgreed;
 
-  public void addMember(Member member) {
-    this.member = member;
-  }
-
   public static Term from(boolean marketingAgreed) {
     Term term = new Term();
     term.isAgeOver14 = true;
@@ -47,5 +41,15 @@ public class Term {
     return term;
   }
 
+  public void addMember(Member member) {
+    this.member = member;
+  }
 
+  public void updateMarketingAgreed(boolean marketingAgreed) {
+    this.marketingAgreed = marketingAgreed;
+  }
+
+  public void updateServiceTermAgreed(boolean serviceTermAgreed) {
+    this.serviceTermAgreed = serviceTermAgreed;
+  }
 }

@@ -1,8 +1,10 @@
 package com.retro.domain.member.presentation;
 
 import com.retro.domain.member.application.MemberService;
+import com.retro.domain.member.application.dto.MemberMarketingAgreedUpdateRequest;
 import com.retro.domain.member.application.dto.MemberNicknameUpdateRequest;
 import com.retro.domain.member.application.dto.MemberPublicUpdateRequest;
+import com.retro.domain.member.application.dto.MemberServiceTermAgreedUpdateRequest;
 import com.retro.global.common.dto.ApiResponse;
 import com.retro.global.common.utils.SecurityUtil;
 import jakarta.validation.Valid;
@@ -35,6 +37,28 @@ public class MemberController {
       @RequestBody @Valid MemberNicknameUpdateRequest request
   ) {
     memberService.updateNickname(securityUtil.getAuthenticatedUserId(), request.nickname());
+    return ApiResponse.success();
+  }
+
+  @PatchMapping("/service-term-agreed")
+  public ApiResponse<Void> updateServiceTermAgreed(
+      @RequestBody @Valid MemberServiceTermAgreedUpdateRequest request
+  ) {
+    memberService.updateServiceTermAgreed(
+        securityUtil.getAuthenticatedUserId(),
+        request.serviceTermAgreed()
+    );
+    return ApiResponse.success();
+  }
+
+  @PatchMapping("/marketing-agreed")
+  public ApiResponse<Void> updateMarketingAgreed(
+      @RequestBody @Valid MemberMarketingAgreedUpdateRequest request
+  ) {
+    memberService.updateMarketingAgreed(
+        securityUtil.getAuthenticatedUserId(),
+        request.marketingAgreed()
+    );
     return ApiResponse.success();
   }
 
