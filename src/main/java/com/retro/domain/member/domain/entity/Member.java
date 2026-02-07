@@ -29,6 +29,8 @@ import lombok.NoArgsConstructor;
     })
 public class Member extends BaseEntity {
 
+  public static final Long DELETED_MEMBER_ID = -1L;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;

@@ -1,7 +1,6 @@
 package com.retro.domain.retro.application;
 
 import com.retro.domain.member.application.MemberFacade;
-import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
@@ -28,7 +27,6 @@ import org.springframework.util.CollectionUtils;
 public class RetroService {
 
   private final RetroRepository retroRepository;
-  private final MemberRepository memberRepository;
   private final KeywordRepository keywordRepository;
   private final MemberFacade memberFacade;
 
@@ -118,5 +116,15 @@ public class RetroService {
 
   private boolean hasMoreRetros(int size, List<Retro> retros) {
     return retros.size() > size;
+  }
+
+  @Transactional
+  public void updateRetrosForWithdrawnMember(Long memberId) {
+    List<Retro> retros = retroRepository.findAllByMemberId(memberId);
+    updateDeletedMembersRetros(retros);
+  }
+
+  private void updateDeletedMembersRetros(List<Retro> retros) {
+    retros.forEach(retro -> retro.markAsWithdrawnMember(Member.DELETED_MEMBER_ID));
   }
 }

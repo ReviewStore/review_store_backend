@@ -2,6 +2,7 @@ package com.retro.domain.member.application;
 
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
+import com.retro.domain.member.domain.event.MemberEventPublisher;
 import com.retro.global.common.exception.BusinessException;
 import com.retro.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
 
   private final MemberRepository memberRepository;
+  private final MemberEventPublisher memberEventPublisher;
 
   public Member getMember(Long memberId) {
     return memberRepository.findById(memberId)
@@ -41,5 +43,12 @@ public class MemberService {
   public void updateNickname(Long memberId, String nickname) {
     Member member = getMember(memberId);
     member.updateNickname(nickname);
+  }
+
+  @Transactional
+  public void withdrawMember(Long memberId) {
+    Member member = getMember(memberId);
+    memberEventPublisher.publishMemberWithdrawnEvent(member);
+    memberRepository.delete(member);
   }
 }

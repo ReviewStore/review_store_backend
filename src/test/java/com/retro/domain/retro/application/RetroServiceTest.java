@@ -54,6 +54,32 @@ class RetroServiceTest {
   @Mock
   private MemberFacade memberFacade;
 
+  @Test
+  @DisplayName("성공: 탈퇴한 회원의 회고 작성자 ID를 일괄 변경한다")
+  void updateRetrosForWithdrawnMember() {
+
+    // given
+    Long memberId = 1L;
+    Retro retro1 = Retro.of(memberId, "네이버1", "FE", LocalDate.now(), "2차", "#React", "K", "P",
+        "T",
+        "요약");
+    Retro retro2 = Retro.of(memberId, "네이버2", "FE", LocalDate.now(), "2차", "#React", "K", "P",
+        "T",
+        "요약");
+    Retro retro3 = Retro.of(memberId, "네이버3", "FE", LocalDate.now(), "2차", "#React", "K", "P",
+        "T",
+        "요약");
+    List<Retro> retros = List.of(retro1, retro2, retro3);
+
+    given(retroRepository.findAllByMemberId(memberId)).willReturn(retros);
+
+    // when
+    retroService.updateRetrosForWithdrawnMember(memberId);
+
+    // then
+    verify(retroRepository).findAllByMemberId(memberId);
+  }
+
   @Nested
   @DisplayName("회고 생성(createRetro) 테스트")
   class CreateRetro {

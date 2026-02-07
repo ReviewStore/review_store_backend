@@ -13,4 +13,7 @@ public interface RetroRepository {
   List<Retro> findByMemberIdWithCursor(Long memberId, Long cursorId, int size);
 
   void delete(Retro retro);
+
+  List<Retro> findAllByMemberId(Long memberId);
+
 }

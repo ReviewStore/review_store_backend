@@ -104,4 +104,8 @@ public class Retro extends BaseEntity {
   public boolean isCreatedByViewer(Long creatorId, Long viewerId) {
     return creatorId.equals(viewerId);
   }
+
+  public void markAsWithdrawnMember(Long deletedMemberId) {
+    this.memberId = deletedMemberId;
+  }
 }

@@ -7,6 +7,7 @@ import com.retro.global.common.dto.ApiResponse;
 import com.retro.global.common.utils.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +35,12 @@ public class MemberController {
       @RequestBody @Valid MemberNicknameUpdateRequest request
   ) {
     memberService.updateNickname(securityUtil.getAuthenticatedUserId(), request.nickname());
+    return ApiResponse.success();
+  }
+
+  @DeleteMapping
+  public ApiResponse<Void> withdrawMember() {
+    memberService.withdrawMember(securityUtil.getAuthenticatedUserId());
     return ApiResponse.success();
   }
 }

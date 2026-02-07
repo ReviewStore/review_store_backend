@@ -1,13 +1,17 @@
 package com.retro.domain.member.application;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.entity.PostReadPermission;
 import com.retro.domain.member.domain.entity.Provider;
 import com.retro.domain.member.domain.entity.Term;
+import com.retro.domain.member.domain.event.MemberEventPublisher;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class MemberServiceTest {
@@ -24,6 +29,9 @@ class MemberServiceTest {
 
   @Mock
   private MemberRepository memberRepository;
+
+  @Mock
+  private MemberEventPublisher memberEventPublisher;
 
   @Test
   @DisplayName("성공: 공개 설정을 true로 변경하면 게시물이 공개된다.")
@@ -71,5 +79,24 @@ class MemberServiceTest {
 
     // then
     assertThat(member.getNickname()).isEqualTo("새닉네임1");
+  }
+
+  @Test
+  @DisplayName("성공: 회원 탈퇴 시 회고 작성자를 삭제 사용자로 변경하고 회원을 삭제한다")
+  void withdrawMember() {
+    // given
+    Long memberId = 1L;
+    Member member = Member.of(Provider.GOOGLE, "google-123", "닉네임", Term.from(true));
+    ReflectionTestUtils.setField(member, "id", memberId);
+    given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
+    doNothing().when(memberRepository).delete(any(Member.class));
+    doNothing().when(memberEventPublisher).publishMemberWithdrawnEvent(any(Member.class));
+
+    // when
+    memberService.withdrawMember(memberId);
+
+    // then
+    verify(memberRepository).delete(member);
+    verify(memberEventPublisher).publishMemberWithdrawnEvent(any(Member.class));
   }
 }
