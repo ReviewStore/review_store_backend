@@ -34,4 +34,9 @@ public class RetroRepositoryImpl implements RetroRepository {
   public void delete(Retro retro) {
     retroJPARepository.delete(retro);
   }
+
+  @Override
+  public List<Retro> findAllByMemberId(Long memberId) {
+    return retroJPARepository.findAllByMemberId(memberId);
+  }
 }

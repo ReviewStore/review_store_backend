@@ -33,4 +33,9 @@ public class MemberRepositoryImpl implements MemberRepository {
   public Optional<Member> findByProviderAndProviderId(Provider provider, String providerId) {
     return memberJPARepository.findByProviderAndProviderId(provider, providerId);
   }
+
+  @Override
+  public void delete(Member member) {
+    memberJPARepository.delete(member);
+  }
 }
