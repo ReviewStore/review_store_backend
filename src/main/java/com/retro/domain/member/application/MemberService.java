@@ -51,4 +51,16 @@ public class MemberService {
     memberEventPublisher.publishMemberWithdrawnEvent(member);
     memberRepository.delete(member);
   }
+
+  @Transactional
+  public void updateMarketingAgreed(Long memberId, boolean marketingAgreed) {
+    Member member = getMember(memberId);
+    member.updateMarketingTermAgreed(marketingAgreed);
+  }
+
+  @Transactional
+  public void updateServiceTermAgreed(Long memberId, boolean serviceTermAgreed) {
+    Member member = getMember(memberId);
+    member.updateServiceTermAgreed(serviceTermAgreed);
+  }
 }
