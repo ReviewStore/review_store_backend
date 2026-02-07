@@ -20,6 +20,9 @@ public enum ErrorCode {
   // ===== 3000번대: 질문 관련 =====
   QUESTION_NOT_FOUND(404, "QUESTION-3001", "존재하지 않는 질문입니다."),
 
+  // ===== 4000번대: 공지사항 관련 =====
+  NOTICE_NOT_FOUND(404, "NOTICE-4001", "존재하지 않는 공지사항입니다."),
+  
   // ===== 9000번대: 공통 에러 =====
   INVALID_INPUT_VALUE(400, "COMMON-9001", "유효하지 않은 입력값입니다."),
   UNAUTHORIZED(400, "COMMON-9002", "권한이 없습니다."),
