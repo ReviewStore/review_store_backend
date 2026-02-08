@@ -5,6 +5,7 @@ import com.retro.domain.auth.application.dto.request.AgreeTermsRequest;
 import com.retro.domain.auth.application.dto.request.GoogleLoginRequest;
 import com.retro.domain.auth.application.dto.request.RefreshRequest;
 import com.retro.domain.auth.application.dto.response.AppleAuthCodeDto;
+import com.retro.global.UserAgentHeader;
 import com.retro.global.common.dto.ApiResponse;
 import com.retro.global.common.dto.MemberDevice;
 import com.retro.global.common.jwt.JwtToken;
@@ -57,6 +58,7 @@ public class AuthController {
   }
 
   @Operation(summary = "애플 로그인 처리", description = "인증 코드로 JWT 토큰을 발급합니다.")
+  @UserAgentHeader
   @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공",
       content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
           examples = @ExampleObject(value = """
@@ -75,7 +77,7 @@ public class AuthController {
   @PostMapping("/oauth2/login/apple")
   public ApiResponse<JwtToken> appleLogin(
       @Parameter(description = "애플 인증 코드", example = "c7e.apple.auth.code")
-      @RequestParam String code, MemberDevice memberDevice
+      @RequestParam String code, @Parameter(hidden = true) MemberDevice memberDevice
   ) throws Exception {
     ApiResponse<JwtToken> success = ApiResponse.success(authService.appleLogin(code, memberDevice));
     return success;
