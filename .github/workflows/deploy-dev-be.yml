@@ -10,61 +10,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ dev-be 브랜치 코드 자동 checkout
+      # 1. 코드 체크아웃
       - name: Checkout dev-be branch
         uses: actions/checkout@v4
 
-      # 2️⃣ JDK 17 설치
+      # 2. JDK 17 설치
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # 3️⃣ application-secret.yaml 생성
+      # 3. application-secret.yaml 생성
       - name: Create application-secret.yaml
         run: |
           echo "${{ secrets.APPLICATION_SECRET_YAML }}" \
           > src/main/resources/application-secret.yaml
 
-      # 4️⃣ Gradle 빌드
-
+      # 4. Gradle 빌드
       - name: Build with Gradle
         run: |
           chmod +x gradlew
-          ./gradlew clean build -x test      
+          ./gradlew clean build -x test
 
-      # 5️⃣ JAR 이름 통일
+      # 5. JAR 이름 통일
       - name: Rename jar
         run: |
           mv build/libs/*SNAPSHOT.jar build/libs/app.jar
 
-      # 5-1️⃣ 원격 서버 디렉터리 보장 (신규 추가)
-      - name: Ensure target directories exist
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.GCP_HOST }}
-          username: ${{ secrets.GCP_USERNAME }}
-          key: ${{ secrets.GCP_PRIVATE_KEY }}
-          port: 2222
-          script: |
-            mkdir -p /home/retrospection1234/spring-boot/review_store_backend/build/libs
-
-
-      # 6️⃣ JAR 전송
-      - name: Copy jar to GCP VM
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.GCP_HOST }}
-          username: ${{ secrets.GCP_USERNAME }}
-          key: ${{ secrets.GCP_PRIVATE_KEY }}
-          port: 2222
-          source: build/libs/app.jar
-          target: /home/retrospection1234/spring-boot/review_store_backend/build/libs/app-new.jar
-          overwrite: true
-
-      # 7️⃣ dev 서버 재시작
-      - name: Restart dev server
+      # 6. 원격 서버 사전 점검 (디렉터리/디스크)
+      - name: Pre-check remote server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.GCP_HOST }}
@@ -73,9 +48,41 @@ jobs:
           port: 2222
           script_stop: true
           script: |
+            echo "[CHECK] Disk space"
+            df -h /
+            echo "[CHECK] Ensure directories"
+            mkdir -p /home/retrospection1234/spring-boot/review_store_backend/build/libs
+
+      # 7. JAR 전송 (임시 파일명)
+      - name: Copy jar to GCP VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_PRIVATE_KEY }}
+          port: 2222
+          source: build/libs/app.jar
+          target: /home/retrospection1234/spring-boot/review_store_backend/build/libs
+          overwrite: true
+
+      # 8. 원격 서버 배포 (교체 + 재시작)
+      - name: Deploy & Restart on GCP VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_PRIVATE_KEY }}
+          port: 2222
+          script_stop: true
+          script: |
+            set -e
             cd /home/retrospection1234/spring-boot/review_store_backend
-            sudo fuser -k -n tcp 8080 || true
-            mv build/libs/app-new.jar build/libs/app.jar
+            echo "[DEPLOY] Stop existing process"
+            pkill -f "java -jar build/libs/app.jar" || true
+
+            echo "[DEPLOY] Start new process"
             nohup java -jar build/libs/app.jar > output.log 2>&1 &
 
-    
+            echo "[VERIFY] Process running"
+            sleep 5
+            ps -ef | grep "java -jar build/libs/app.jar" | grep -v grep
