@@ -75,11 +75,10 @@ jobs:
           port: 2222
           script_stop: true
           script: |
-            set -e
-            cd /home/retrospection1234/spring-boot/review_store_backend
-    
-            echo "[DEPLOY] Stop existing process"
-            pkill -f "java -jar build/libs/app.jar" >/dev/null 2>&1 || true
+            cd /home/***/spring-boot/review_store_backend
+            
+            echo "[DEPLOY] Stop existing process (by port)"
+            fuser -k -n tcp 8080 || true
             sleep 2
             
             echo "[DEPLOY] Start new process"
@@ -88,3 +87,4 @@ jobs:
             echo "[VERIFY] Process running"
             sleep 5
             ps -ef | grep "java -jar build/libs/app.jar" | grep -v grep || true
+
