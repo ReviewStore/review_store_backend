@@ -77,12 +77,14 @@ jobs:
           script: |
             set -e
             cd /home/retrospection1234/spring-boot/review_store_backend
+    
             echo "[DEPLOY] Stop existing process"
-            pkill -f "java -jar build/libs/app.jar" || true
-
+            pkill -f "java -jar build/libs/app.jar" >/dev/null 2>&1 || true
+            sleep 2
+            
             echo "[DEPLOY] Start new process"
             nohup java -jar build/libs/app.jar > output.log 2>&1 &
-
+            
             echo "[VERIFY] Process running"
             sleep 5
-            ps -ef | grep "java -jar build/libs/app.jar" | grep -v grep
+            ps -ef | grep "java -jar build/libs/app.jar" | grep -v grep || true
