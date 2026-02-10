@@ -29,7 +29,7 @@ jobs:
 
       # 4️⃣ Gradle 빌드
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: sudo ./gradlew clean build
 
       # 5️⃣ JAR 이름 통일
       - name: Rename jar
