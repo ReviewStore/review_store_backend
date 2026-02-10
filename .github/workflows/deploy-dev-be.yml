@@ -56,8 +56,11 @@ jobs:
           host: ${{ secrets.GCP_HOST }}
           username: ${{ secrets.GCP_USERNAME }}
           key: ${{ secrets.GCP_PRIVATE_KEY }}
+          port: 2222
           script_stop: true
           script: |
             cd /home/retrospection1234/spring-boot/review_store_backend
             sudo fuser -k -n tcp 8080 || true
             nohup java -jar build/libs/app.jar > output.log 2>&1 &
+
+    
