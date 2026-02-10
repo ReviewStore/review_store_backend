@@ -29,7 +29,11 @@ jobs:
 
       # 4️⃣ Gradle 빌드
       - name: Build with Gradle
-        run: sudo ./gradlew clean build
+        run: |
+          cd spring-boot/review_store_backend
+          chmod +x gradlew
+          ./gradlew clean build
+      
 
       # 5️⃣ JAR 이름 통일
       - name: Rename jar
