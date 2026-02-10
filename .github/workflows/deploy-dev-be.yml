@@ -39,6 +39,18 @@ jobs:
         run: |
           mv build/libs/*SNAPSHOT.jar build/libs/app.jar
 
+      # 5-1️⃣ 원격 서버 디렉터리 보장 (신규 추가)
+      - name: Ensure target directories exist
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_PRIVATE_KEY }}
+          port: 2222
+          script: |
+            mkdir -p /home/retrospection1234/spring-boot/review_store_backend/build/libs
+
+
       # 6️⃣ JAR 전송
       - name: Copy jar to GCP VM
         uses: appleboy/scp-action@v0.1.7
@@ -48,7 +60,7 @@ jobs:
           key: ${{ secrets.GCP_PRIVATE_KEY }}
           port: 2222
           source: build/libs/app.jar
-          target: /home/retrospection1234/spring-boot/review_store_backend/build/libs
+          target: /home/retrospection1234/spring-boot/review_store_backend/build/libs/app-new.jar
           overwrite: true
 
       # 7️⃣ dev 서버 재시작
@@ -63,6 +75,7 @@ jobs:
           script: |
             cd /home/retrospection1234/spring-boot/review_store_backend
             sudo fuser -k -n tcp 8080 || true
+            mv build/libs/app-new.jar build/libs/app.jar
             nohup java -jar build/libs/app.jar > output.log 2>&1 &
 
     
