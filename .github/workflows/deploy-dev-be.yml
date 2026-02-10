@@ -46,6 +46,7 @@ jobs:
           host: ${{ secrets.GCP_HOST }}
           username: ${{ secrets.GCP_USERNAME }}
           key: ${{ secrets.GCP_PRIVATE_KEY }}
+          port: 2222
           source: build/libs/app.jar
           target: /home/retrospection1234/spring-boot/review_store_backend/build/libs
 
