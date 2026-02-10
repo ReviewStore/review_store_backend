@@ -49,6 +49,7 @@ jobs:
           port: 2222
           source: build/libs/app.jar
           target: /home/retrospection1234/spring-boot/review_store_backend/build/libs
+          overwrite: true
 
       # 7️⃣ dev 서버 재시작
       - name: Restart dev server
