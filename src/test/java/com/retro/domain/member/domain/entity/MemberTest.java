@@ -28,8 +28,8 @@ class MemberTest {
 
     assertThat(member.getIsPublic()).isFalse();
     assertThat(member.getRole()).isEqualTo(Role.MEMBER);
-    assertThat(member.getPostReadPermission()).isEqualTo(PostReadPermission.LIMITED);
-    assertThat(member.getRemainingPostReadCount()).isEqualTo(5);
+    assertThat(member.getRetroReadPermission()).isEqualTo(RetroReadPermission.LIMITED);
+    assertThat(member.getRemainingRetroReadCount()).isEqualTo(5);
     assertThat(member.getTerm()).isNotNull();
     assertThat(member.getTerm().getMember()).isEqualTo(member);
   }
@@ -38,11 +38,11 @@ class MemberTest {
   @DisplayName("열람 횟수를 차감하면 remainingPostReadCount가 1 감소한다")
   void reduceRemainingPostReadCount_decreaseByOne() {
     Member member = createMemberFixture();
-    int before = member.getRemainingPostReadCount();
+    int before = member.getRemainingRetroReadCount();
 
     member.reduceRemainingPostReadCount();
 
-    assertThat(member.getRemainingPostReadCount()).isEqualTo(before - 1);
+    assertThat(member.getRemainingRetroReadCount()).isEqualTo(before - 1);
   }
 
   @Test
@@ -52,9 +52,9 @@ class MemberTest {
 
     member.grantPostReadPermission();
 
-    assertThat(member.getPostReadPermission()).isEqualTo(PostReadPermission.UNLIMITED);
+    assertThat(member.getRetroReadPermission()).isEqualTo(RetroReadPermission.UNLIMITED);
   }
-  
+
   @Test
   @DisplayName("LIMITED 권한이면 hasLimitedPostReadPermission이 true를 반환한다")
   void hasLimitedPostReadPermission_trueWhenLimited() {
@@ -108,7 +108,7 @@ class MemberTest {
       member.reduceRemainingPostReadCount();
     }
 
-    assertThat(member.getRemainingPostReadCount()).isZero();
+    assertThat(member.getRemainingRetroReadCount()).isZero();
     assertThat(member.isPostReadCountExceeded()).isTrue();
   }
 
@@ -119,5 +119,32 @@ class MemberTest {
     member.grantPostReadPermission();
 
     assertThat(member.isPostReadCountExceeded()).isFalse();
+  }
+
+  @Test
+  @DisplayName("remainingPostReadCount가 1이고 LIMITED면 hasOneRemainingPostReadCount는 true")
+  void hasOneRemainingPostReadCount_true_whenLimitedAndOne() {
+    Member member = createMemberFixture();
+
+    for (int i = 0; i < 4; i++) {
+      member.reduceRemainingPostReadCount();
+    }
+
+    assertThat(member.getRemainingRetroReadCount()).isEqualTo(1);
+    assertThat(member.hasOneRemainingPostReadCount()).isTrue();
+  }
+
+  @Test
+  @DisplayName("remainingPostReadCount가 1이어도 UNLIMITED면 hasOneRemainingPostReadCount는 false")
+  void hasOneRemainingPostReadCount_false_whenUnlimited() {
+    Member member = createMemberFixture();
+
+    for (int i = 0; i < 4; i++) {
+      member.reduceRemainingPostReadCount();
+    }
+    member.grantPostReadPermission();
+
+    assertThat(member.getRemainingRetroReadCount()).isEqualTo(1);
+    assertThat(member.hasOneRemainingPostReadCount()).isFalse();
   }
 }

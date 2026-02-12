@@ -3,6 +3,7 @@ package com.retro.domain.auth.application;
 import com.retro.domain.auth.application.dto.request.AgreeTermsRequest;
 import com.retro.domain.auth.application.dto.response.OAuth2AppleMemberInfo;
 import com.retro.domain.auth.application.dto.response.OAuth2GoogleMemberInfo;
+import com.retro.domain.auth.domain.event.AuthEventPublisher;
 import com.retro.domain.member.application.exception.MemberNotRegisteredException;
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
@@ -27,9 +28,11 @@ public class AuthService {
 
   private final AppleOAuth2Service appleOAuth2Service;
   private final GoogleOAuth2Service googleOAuth2Service;
+  private final AuthEventPublisher authEventPublisher;
   private final RedisService redisService;
   private final JwtProvider jwtProvider;
   private final MemberRepository memberRepository;
+
 
   public JwtToken appleLogin(String authCode, MemberDevice memberDevice) {
     OAuth2AppleMemberInfo appleMemberInfo = appleOAuth2Service.processAppleLogin(authCode,
@@ -121,6 +124,7 @@ public class AuthService {
     Term term = Term.from(request.marketingAgreed());
     Member member = Member.of(provider, providerId, request.nickname(), term);
     memberRepository.save(member);
+    authEventPublisher.publishRegistrationEvent(member);
 
     JwtToken jwtToken = jwtProvider.createToken(member.getId(), member.getRole().getCode());
     redisService.saveMemberRefreshToken(member.getId(), jwtToken.getRefreshToken());

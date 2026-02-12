@@ -8,8 +8,8 @@ import static org.mockito.Mockito.verify;
 
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
-import com.retro.domain.member.domain.entity.PostReadPermission;
 import com.retro.domain.member.domain.entity.Provider;
+import com.retro.domain.member.domain.entity.RetroReadPermission;
 import com.retro.domain.member.domain.entity.Term;
 import com.retro.domain.member.domain.event.MemberEventPublisher;
 import java.util.Optional;
@@ -63,7 +63,7 @@ class MemberServiceTest {
 
     // then
     assertThat(member.getIsPublic()).isFalse();
-    assertThat(member.getPostReadPermission()).isEqualTo(PostReadPermission.LIMITED);
+    assertThat(member.getRetroReadPermission()).isEqualTo(RetroReadPermission.LIMITED);
   }
 
   @Test

@@ -3,7 +3,7 @@ package com.retro.domain.member.domain.entity;
 import lombok.Getter;
 
 @Getter
-public enum PostReadPermission {
+public enum RetroReadPermission {
   LIMITED,        // 제한 열람 (기본)
   UNLIMITED;      // 무제한 열람
 
