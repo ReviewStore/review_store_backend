@@ -68,7 +68,7 @@ public class Member extends BaseEntity {
     this.term = term;
     this.role = Role.MEMBER;
     this.isPublic = false;
-    this.retroReadPermission = retroReadPermission.LIMITED;
+    this.retroReadPermission = RetroReadPermission.LIMITED;
     this.remainingRetroReadCount = 5;
   }
 

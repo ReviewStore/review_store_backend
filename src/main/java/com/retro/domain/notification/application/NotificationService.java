@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class NotificationService {
 
   private final NotificationRepository notificationRepository;
@@ -32,7 +32,7 @@ public class NotificationService {
         WELCOME_CONTENT.getMessage());
     notificationRepository.save(notification);
   }
-
+// TODO 추후 공지 알림 기능 구현 시 사용(스프링 배치)
 //  @Transactional
 //  public void createNoticeNotificationForAllMembers() {
 //    List<Long> memberIds = memberRepository.findAllMemberIds();
