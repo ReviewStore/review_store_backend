@@ -8,6 +8,8 @@ import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
 import com.retro.domain.retro.domain.entity.Retro;
+import com.retro.domain.retro.domain.event.RetroEventPublisher;
+import com.retro.domain.retro.domain.event.RetroReadLimitWarningEvent;
 import com.retro.domain.retro.domain.repository.KeywordRepository;
 import com.retro.domain.retro.domain.repository.RetroRepository;
 import com.retro.global.common.exception.BusinessException;
@@ -29,6 +31,7 @@ public class RetroService {
   private final RetroRepository retroRepository;
   private final KeywordRepository keywordRepository;
   private final MemberFacade memberFacade;
+  private final RetroEventPublisher retroEventPublisher;
 
   @Transactional
   public Retro createRetro(Long memberId, RetroCreateRequest request) {
@@ -81,6 +84,9 @@ public class RetroService {
       throw new BusinessException(ErrorCode.RETRO_READ_POINT_EXCEEDED);
     }
     viewer.reduceRemainingPostReadCount();
+    if (viewer.hasOneRemainingPostReadCount()) {
+      retroEventPublisher.publishRetroReadLimitWarningEvent(RetroReadLimitWarningEvent.of(viewer));
+    }
     return RetroDetailResponse.from(retro);
   }
 

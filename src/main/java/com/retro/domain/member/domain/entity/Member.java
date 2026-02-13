@@ -55,10 +55,10 @@ public class Member extends BaseEntity {
   private Term term;
 
   @Enumerated(EnumType.STRING)
-  private PostReadPermission postReadPermission;
+  private RetroReadPermission retroReadPermission;
 
   @Column(nullable = false)
-  private int remainingPostReadCount;
+  private int remainingRetroReadCount;
 
   @Builder(access = AccessLevel.PRIVATE)
   private Member(Provider provider, String providerId, String nickname, Term term) {
@@ -68,8 +68,8 @@ public class Member extends BaseEntity {
     this.term = term;
     this.role = Role.MEMBER;
     this.isPublic = false;
-    this.postReadPermission = PostReadPermission.LIMITED;
-    this.remainingPostReadCount = 5;
+    this.retroReadPermission = RetroReadPermission.LIMITED;
+    this.remainingRetroReadCount = 5;
   }
 
   public static Member of(Provider provider, String providerId, String nickname, Term term) {
@@ -89,15 +89,15 @@ public class Member extends BaseEntity {
   }
 
   public void reduceRemainingPostReadCount() {
-    this.remainingPostReadCount--;
+    this.remainingRetroReadCount--;
   }
 
   public void grantPostReadPermission() {
-    this.postReadPermission = PostReadPermission.UNLIMITED;
+    this.retroReadPermission = RetroReadPermission.UNLIMITED;
   }
 
   public boolean hasLimitedPostReadPermission() {
-    return this.postReadPermission.equals(PostReadPermission.LIMITED);
+    return this.retroReadPermission.equals(RetroReadPermission.LIMITED);
   }
 
   public void openOwnPublication() {
@@ -106,8 +106,8 @@ public class Member extends BaseEntity {
 
   public void closeOwnPublication() {
     this.isPublic = false;
-    if (this.postReadPermission.equals(PostReadPermission.UNLIMITED)) {
-      this.postReadPermission = PostReadPermission.LIMITED;
+    if (this.retroReadPermission.equals(RetroReadPermission.UNLIMITED)) {
+      this.retroReadPermission = RetroReadPermission.LIMITED;
     }
   }
 
@@ -117,8 +117,13 @@ public class Member extends BaseEntity {
   }
 
   public boolean isPostReadCountExceeded() {
-    return this.postReadPermission.equals(PostReadPermission.LIMITED)
-        && this.remainingPostReadCount == 0;
+    return this.retroReadPermission.equals(RetroReadPermission.LIMITED)
+        && this.remainingRetroReadCount == 0;
+  }
+
+  public boolean hasOneRemainingPostReadCount() {
+    return this.retroReadPermission.equals(RetroReadPermission.LIMITED)
+        && this.remainingRetroReadCount == 1;
   }
 
   public void updateNickname(String nickname) {

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.retro.domain.auth.application.dto.request.AgreeTermsRequest;
 import com.retro.domain.auth.application.dto.response.OAuth2AppleMemberInfo;
+import com.retro.domain.auth.domain.event.AuthEventPublisher;
 import com.retro.domain.member.application.exception.MemberNotRegisteredException;
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
@@ -42,6 +43,8 @@ class AuthServiceTest {
   private RedisService redisService;
   @Mock
   private JwtProvider jwtProvider;
+  @Mock
+  private AuthEventPublisher authEventPublisher;
   @Mock
   private MemberRepository memberRepository;
   private MemberDevice memberDevice;
@@ -157,6 +160,7 @@ class AuthServiceTest {
 
     when(redisService.getTempMemberInfo(tempMemberId)).thenReturn(mockInfo);
     when(memberRepository.save(any(Member.class))).thenReturn(member);
+    doNothing().when(authEventPublisher).publishRegistrationEvent(any(Member.class));
     when(jwtProvider.createToken(any(), anyString())).thenReturn(jwtToken);
 
     // when
