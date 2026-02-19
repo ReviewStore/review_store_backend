@@ -1,6 +1,7 @@
 package com.retro.domain.retro.infrastructure;
 
 import com.retro.domain.retro.domain.entity.Retro;
+import com.retro.domain.retro.domain.entity.RetroReport;
 import com.retro.domain.retro.domain.repository.RetroRepository;
 import com.retro.domain.retro.infrastructure.jpa.RetroJPARepository;
 import java.util.List;
@@ -38,5 +39,10 @@ public class RetroRepositoryImpl implements RetroRepository {
   @Override
   public List<Retro> findAllByMemberId(Long memberId) {
     return retroJPARepository.findAllByMemberId(memberId);
+  }
+
+  @Override
+  public Optional<RetroReport> existsReportByRetroAndReporter(Long retroId, Long reporterMemberId) {
+    return retroRepositoryCustom.existsReportByRetroAndReporter(retroId, reporterMemberId);
   }
 }

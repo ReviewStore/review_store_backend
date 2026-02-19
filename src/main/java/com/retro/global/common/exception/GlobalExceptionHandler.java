@@ -5,6 +5,7 @@ import com.retro.global.common.dto.ErrorResponse;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -62,6 +63,21 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity
         .status(HttpStatus.BAD_REQUEST) // 400 반환
+        .body(response);
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  protected ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+      DataIntegrityViolationException e
+  ) {
+    log.error("DataIntegrityViolationException: {}", e.getMessage());
+
+    ErrorResponse response = ErrorResponse.of(
+        ErrorCode.INVALID_INPUT_VALUE,
+        "데이터 무결성 제약을 위반했습니다. 요청 값을 확인해주세요."
+    );
+    return ResponseEntity
+        .status(HttpStatus.BAD_REQUEST)
         .body(response);
   }
 

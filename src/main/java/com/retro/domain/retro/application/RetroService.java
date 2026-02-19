@@ -8,6 +8,8 @@ import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
 import com.retro.domain.retro.domain.entity.Retro;
+import com.retro.domain.retro.domain.entity.RetroReport;
+import com.retro.domain.retro.domain.event.RetroBlindedEvent;
 import com.retro.domain.retro.domain.event.RetroEventPublisher;
 import com.retro.domain.retro.domain.event.RetroReadLimitWarningEvent;
 import com.retro.domain.retro.domain.repository.KeywordRepository;
@@ -15,6 +17,7 @@ import com.retro.domain.retro.domain.repository.RetroRepository;
 import com.retro.global.common.exception.BusinessException;
 import com.retro.global.common.exception.ErrorCode;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +78,10 @@ public class RetroService {
     Retro retro = retroRepository.findById(retroId)
         .orElseThrow(() -> new BusinessException(ErrorCode.RETRO_NOT_FOUND));
 
+    if (retro.isBlindedRetro()) {
+      throw new BusinessException(ErrorCode.RETRO_BLINDED);
+    }
+
     Long authorId = retro.getMemberId();
 
     if (retro.isCreatedByViewer(authorId, viewerId)) {
@@ -132,5 +139,29 @@ public class RetroService {
 
   private void updateDeletedMembersRetros(List<Retro> retros) {
     retros.forEach(retro -> retro.markAsWithdrawnMember(Member.DELETED_MEMBER_ID));
+  }
+
+  @Transactional
+  public void reportRetro(Long reporterId, Long retroId) {
+
+    Retro retro = retroRepository.findById(retroId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.RETRO_NOT_FOUND));
+
+    Optional<RetroReport> optionalRetroReport = retroRepository.existsReportByRetroAndReporter(
+        retroId, reporterId);
+
+    if (optionalRetroReport.isPresent()) {
+      throw new BusinessException(ErrorCode.RETRO_ALREADY_REPORTED);
+    }
+
+    boolean isBlinded = retro.report();
+
+    RetroReport newReportByConnectingUser = RetroReport.of(retro, reporterId);
+    retro.addReport(newReportByConnectingUser);
+
+    if (isBlinded) {
+      retroEventPublisher.publishRetroBlindedEvent(RetroBlindedEvent.of(retro));
+    }
+    
   }
 }
