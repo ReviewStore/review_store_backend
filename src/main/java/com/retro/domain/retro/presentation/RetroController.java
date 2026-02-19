@@ -106,5 +106,16 @@ public class RetroController {
     RetroCursorPageResponse response = retroService.getMyRetros(memberId, cursorId, size);
     return ApiResponse.success(response);
   }
+
+  @Operation(
+      summary = "회고 신고",
+      description = "회고 신고를 누적하고 2회 이상이면 블라인드 처리합니다."
+  )
+  @PostMapping("/{retroId}/reports")
+  public ApiResponse<Void> reportRetro(@PathVariable Long retroId) {
+    Long reporterId = securityUtil.getAuthenticatedUserId();
+    retroService.reportRetro(reporterId, retroId);
+    return ApiResponse.success();
+  }
 }
 

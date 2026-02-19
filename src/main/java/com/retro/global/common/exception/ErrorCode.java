@@ -16,7 +16,9 @@ public enum ErrorCode {
   // ===== 2000번대: 면접 후기 관련 =====
   RETRO_NOT_FOUND(404, "RETRO-2001", "존재하지 않는 면접 후기입니다."),
   RETRO_READ_POINT_EXCEEDED(403, "RETRO-2002", "회고 열람 가능 횟수를 초과했습니다."),
-
+  RETRO_BLINDED(403, "RETRO-2003", "블라인드 처리된 게시물입니다."),
+  RETRO_ALREADY_REPORTED(400, "RETRO-2004", "이미 신고한 게시물입니다."),
+  
   // ===== 3000번대: 질문 관련 =====
   QUESTION_NOT_FOUND(404, "QUESTION-3001", "존재하지 않는 질문입니다."),
 

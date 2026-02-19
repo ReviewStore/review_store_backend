@@ -23,6 +23,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "retros")
 public class Retro extends BaseEntity {
 
+  private static final int BLIND_REPORT_THRESHOLD = 2;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long retroId;
@@ -55,6 +57,15 @@ public class Retro extends BaseEntity {
 
   private String summary;
 
+  @Column(nullable = false)
+  private int reportCount;
+
+  @Column(nullable = false)
+  private boolean blinded;
+
+  @OneToMany(mappedBy = "retro", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<RetroReport> reports = new ArrayList<>();
+
   @OneToMany(mappedBy = "retro", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<InterviewQuestion> questions = new ArrayList<>();
 
@@ -72,6 +83,8 @@ public class Retro extends BaseEntity {
     this.problemText = problemText;
     this.tryText = tryText;
     this.summary = summary;
+    this.reportCount = 0;
+    this.blinded = false;
   }
 
   public static Retro of(Long memberId, String companyName, String position,
@@ -107,5 +120,28 @@ public class Retro extends BaseEntity {
 
   public void markAsWithdrawnMember(Long deletedMemberId) {
     this.memberId = deletedMemberId;
+  }
+
+  public boolean isBlindedRetro() {
+    return this.blinded;
+  }
+
+
+  public boolean report() {
+    this.reportCount++;
+    if (shouldBeBlinded()) {
+      this.blinded = true;
+      return true;
+    }
+    return false;
+  }
+
+  private boolean shouldBeBlinded() {
+    return !this.blinded && this.reportCount >= BLIND_REPORT_THRESHOLD;
+  }
+
+  public void addReport(RetroReport report) {
+    this.reports.add(report);
+    report.addRetro(this);
   }
 }

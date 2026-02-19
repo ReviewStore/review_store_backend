@@ -19,4 +19,7 @@ public class NotificationFacade {
   }
 
 
+  public void createRetroBlindedNotification(Long memberId) {
+    notificationService.createRetroBlindedNotification(memberId);
+  }
 }

@@ -2,6 +2,8 @@ package com.retro.domain.notification.application;
 
 import static com.retro.domain.notification.domain.entity.NotificationMessage.READ_PERMISSION_EXPIRED_GUIDE_CONTENT;
 import static com.retro.domain.notification.domain.entity.NotificationMessage.READ_PERMISSION_EXPIRED_GUIDE_TITLE;
+import static com.retro.domain.notification.domain.entity.NotificationMessage.RETROSPECTIVE_BLINDED_CONTENT;
+import static com.retro.domain.notification.domain.entity.NotificationMessage.RETROSPECTIVE_BLINDED_TITLE;
 import static com.retro.domain.notification.domain.entity.NotificationMessage.WELCOME_CONTENT;
 import static com.retro.domain.notification.domain.entity.NotificationMessage.WELCOME_TITLE;
 
@@ -52,6 +54,15 @@ public class NotificationService {
     notificationRepository.save(notification);
   }
 
+  @Transactional
+  public void createRetroBlindedNotification(Long memberId) {
+    Notification notification = Notification.of(memberId,
+        NotificationType.BLIND,
+        RETROSPECTIVE_BLINDED_TITLE.getMessage(),
+        RETROSPECTIVE_BLINDED_CONTENT.getMessage());
+    notificationRepository.save(notification);
+  }
+
   public NotificationResponse getNotification(Long memberId, Long notificationId) {
     Notification notification = notificationRepository.findByIdAndMemberId(notificationId, memberId)
         .orElseThrow(() -> new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND));
@@ -98,4 +109,6 @@ public class NotificationService {
   private Long getNextCursor(boolean hasNext, List<Notification> notifications) {
     return hasNext ? notifications.getLast().getNotificationId() : null;
   }
+
+
 }

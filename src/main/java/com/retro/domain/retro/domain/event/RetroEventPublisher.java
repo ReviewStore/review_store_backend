@@ -14,4 +14,8 @@ public class RetroEventPublisher {
       RetroReadLimitWarningEvent retroReadLimitWarningEvent) {
     applicationEventPublisher.publishEvent(retroReadLimitWarningEvent);
   }
+
+  public void publishRetroBlindedEvent(RetroBlindedEvent retroBlindedEvent) {
+    applicationEventPublisher.publishEvent(retroBlindedEvent);
+  }
 }

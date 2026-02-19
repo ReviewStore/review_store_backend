@@ -3,7 +3,9 @@ package com.retro.domain.retro.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -19,6 +21,8 @@ import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
 import com.retro.domain.retro.domain.entity.Keyword;
 import com.retro.domain.retro.domain.entity.Retro;
+import com.retro.domain.retro.domain.event.RetroBlindedEvent;
+import com.retro.domain.retro.domain.event.RetroEventPublisher;
 import com.retro.domain.retro.domain.repository.KeywordRepository;
 import com.retro.domain.retro.domain.repository.RetroRepository;
 import com.retro.global.common.exception.BusinessException;
@@ -54,6 +58,9 @@ class RetroServiceTest {
   @Mock
   private MemberFacade memberFacade;
 
+  @Mock
+  private RetroEventPublisher retroEventPublisher;
+
   @Test
   @DisplayName("성공: 탈퇴한 회원의 회고 작성자 ID를 일괄 변경한다")
   void updateRetrosForWithdrawnMember() {
@@ -78,6 +85,54 @@ class RetroServiceTest {
 
     // then
     verify(retroRepository).findAllByMemberId(memberId);
+  }
+
+  @Test
+  @DisplayName("실패: 블라인드된 회고는 RETRO_BLINDED")
+  void fail_retroBlinded() {
+    // given
+    Long viewerId = 1L;
+    Long retroId = 999L;
+
+    Member viewer = mock(Member.class);
+    Retro retro = mock(Retro.class);
+    given(memberFacade.getMember(viewerId)).willReturn(viewer);
+    given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+    given(retro.isBlindedRetro()).willReturn(true);
+
+    // when & then
+    assertThatThrownBy(() -> retroService.getRetro(viewerId, retroId))
+        .isInstanceOf(BusinessException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.RETRO_BLINDED);
+
+    verify(viewer, never()).reduceRemainingPostReadCount();
+  }
+
+  @Nested
+  @DisplayName("회고 신고(reportRetro)")
+  class ReportRetro {
+
+    @Test
+    @DisplayName("성공: 신고 2회 누적 시 블라인드 이벤트를 발행한다")
+    void success_publishBlindedEvent_whenBlindThresholdReached() {
+      // given
+      Long retroId = 1L;
+      Long reporterId = 2L;
+      Retro retro = Retro.of(10L, "네이버", "BE", LocalDate.now(), "1차", "#Java", "K", "P", "T", "요약");
+      retro.report();
+
+      given(retroRepository.findById(anyLong())).willReturn(Optional.of(retro));
+      given(retroRepository.existsReportByRetroAndReporter(anyLong(), anyLong())).willReturn(
+          Optional.empty());
+      doNothing().when(retroEventPublisher).publishRetroBlindedEvent(any(RetroBlindedEvent.class));
+
+      // when
+      retroService.reportRetro(retroId, reporterId);
+
+      // then
+      verify(retroEventPublisher).publishRetroBlindedEvent(any(RetroBlindedEvent.class));
+      assertThat(retro.isBlindedRetro()).isTrue();
+    }
   }
 
   @Nested
