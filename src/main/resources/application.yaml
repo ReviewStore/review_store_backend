@@ -44,3 +44,15 @@ springdoc:
     disable-swagger-default-url: true
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+  
+# RabbitMQ 설정
+app:
+  rabbitmq:
+    notice:
+      exchange: notice.notification.exchange
+      queue: notice.notification.queue
+      dead-letter-exchange: notice.notification.dlx
+      dead-letter-queue: notice.notification.dlq
+      routing-key: notice.created
+      chunk-size: 1000
+      max-retry-count: 3
