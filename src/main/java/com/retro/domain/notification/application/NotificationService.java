@@ -1,5 +1,7 @@
 package com.retro.domain.notification.application;
 
+import static com.retro.domain.notification.domain.entity.NotificationMessage.NOTICE_CONTENT;
+import static com.retro.domain.notification.domain.entity.NotificationMessage.NOTICE_TITLE;
 import static com.retro.domain.notification.domain.entity.NotificationMessage.READ_PERMISSION_EXPIRED_GUIDE_CONTENT;
 import static com.retro.domain.notification.domain.entity.NotificationMessage.READ_PERMISSION_EXPIRED_GUIDE_TITLE;
 import static com.retro.domain.notification.domain.entity.NotificationMessage.RETROSPECTIVE_BLINDED_CONTENT;
@@ -18,6 +20,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -111,4 +114,19 @@ public class NotificationService {
   }
 
 
+  public void createNoticeNotifications(List<Long> memberIds) {
+    if (CollectionUtils.isEmpty(memberIds)) {
+      return;
+    }
+    List<Notification> notifications = mapNoticeNotifications(memberIds);
+    notificationRepository.saveAll(notifications);
+  }
+
+  private List<Notification> mapNoticeNotifications(List<Long> memberIds) {
+    return memberIds.stream()
+        .map(memberId -> Notification.of(memberId, NotificationType.NOTICE,
+            NOTICE_TITLE.getMessage(),
+            NOTICE_CONTENT.getMessage()))
+        .toList();
+  }
 }

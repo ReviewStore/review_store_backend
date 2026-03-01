@@ -36,7 +36,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             // 공개 URL 허용 (PublicEndpoint에서 관리)
             .requestMatchers(PublicEndpoint.getAll().toArray(new String[0])).permitAll()
-            .requestMatchers(POST, "/api/v1/notices").hasRole("ADMIN")
+            .requestMatchers(POST, "/api/v1/notices/**").hasRole("ADMIN")
             .requestMatchers(GET, "/api/v1/notices/**")
             .hasAnyRole("MEMBER", "ADMIN")
             // 그 외 모든 요청은 인증 필요

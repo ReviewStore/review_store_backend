@@ -1,6 +1,7 @@
 package com.retro.domain.member.application;
 
 import com.retro.domain.member.domain.entity.Member;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,5 +20,9 @@ public class MemberFacade {
 
   public void grantUnlimitedPostReadPermissionToMember(Member member) {
     memberService.grantUnlimitedPostReadPermissionToMember(member);
+  }
+
+  public List<Long> findMemberIdsWithCursor(Long cursorId, int size) {
+    return memberService.findMemberIdsWithCursor(cursorId, size);
   }
 }

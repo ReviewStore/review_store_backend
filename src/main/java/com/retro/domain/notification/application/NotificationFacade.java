@@ -1,5 +1,6 @@
 package com.retro.domain.notification.application;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,5 +22,9 @@ public class NotificationFacade {
 
   public void createRetroBlindedNotification(Long memberId) {
     notificationService.createRetroBlindedNotification(memberId);
+  }
+
+  public void createNoticeNotifications(List<Long> memberIds) {
+    notificationService.createNoticeNotifications(memberIds);
   }
 }
