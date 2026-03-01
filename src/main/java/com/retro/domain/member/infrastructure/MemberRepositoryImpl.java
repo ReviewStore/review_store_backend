@@ -4,6 +4,7 @@ import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.entity.Provider;
 import com.retro.domain.member.infrastructure.jpa.MemberJPARepository;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Repository;
 public class MemberRepositoryImpl implements MemberRepository {
 
   private final MemberJPARepository memberJPARepository;
+  private final MemberRepositoryCustom memberRepositoryCustom;
 
   @Override
   public Member save(Member member) {
@@ -37,5 +39,10 @@ public class MemberRepositoryImpl implements MemberRepository {
   @Override
   public void delete(Member member) {
     memberJPARepository.delete(member);
+  }
+
+  @Override
+  public List<Long> findMemberIdsWithCursor(Long cursorId, int size) {
+    return memberRepositoryCustom.findMemberIdsWithCursor(cursorId, size);
   }
 }

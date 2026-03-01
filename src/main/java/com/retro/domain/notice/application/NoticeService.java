@@ -2,6 +2,7 @@ package com.retro.domain.notice.application;
 
 import com.retro.domain.notice.application.dto.NoticeCreateRequest;
 import com.retro.domain.notice.application.dto.NoticeCreateResponse;
+import com.retro.domain.notice.application.event.NoticeEventPublisher;
 import com.retro.domain.notice.domain.entity.Notice;
 import com.retro.domain.notice.domain.entity.repository.NoticeRepository;
 import com.retro.global.common.exception.BusinessException;
@@ -16,11 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class NoticeService {
 
   private final NoticeRepository noticeRepository;
+  private final NoticeEventPublisher noticeEventPublisher;
+
 
   @Transactional
   public NoticeCreateResponse createNotice(NoticeCreateRequest request) {
     Notice notice = request.toEntity();
     Notice savedNotice = noticeRepository.createNotice(notice);
+    noticeEventPublisher.publishNoticeCreatedEvent(savedNotice.getNoticeId());
     return NoticeCreateResponse.of(savedNotice.getNoticeId(),
         savedNotice.getCreatedAt());
   }

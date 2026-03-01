@@ -5,6 +5,7 @@ import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.event.MemberEventPublisher;
 import com.retro.global.common.exception.BusinessException;
 import com.retro.global.common.exception.ErrorCode;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -62,5 +63,9 @@ public class MemberService {
   public void updateServiceTermAgreed(Long memberId, boolean serviceTermAgreed) {
     Member member = getMember(memberId);
     member.updateServiceTermAgreed(serviceTermAgreed);
+  }
+
+  public List<Long> findMemberIdsWithCursor(Long cursorId, int size) {
+    return memberRepository.findMemberIdsWithCursor(cursorId, size);
   }
 }

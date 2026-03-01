@@ -2,6 +2,7 @@ package com.retro.domain.member.domain;
 
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.entity.Provider;
+import java.util.List;
 import java.util.Optional;
 
 public interface MemberRepository {
@@ -16,4 +17,5 @@ public interface MemberRepository {
 
   void delete(Member member);
 
+  List<Long> findMemberIdsWithCursor(Long cursorId, int size);
 }
