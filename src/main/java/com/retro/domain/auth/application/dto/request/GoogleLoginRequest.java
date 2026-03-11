@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GoogleLoginRequest {
 
-    @Schema(description = "구글 ID Token", example = "eyJhbGciOiJSUzI1NiIsImtpZCI6...")
-    private String idToken;
+  @Schema(description = "구글 ID Token", example = "eyJhbGciOiJSUzI1NiIsImtpZCI6...")
+  private String idToken;
+  @Schema(description = "로그인 플랫폼", example = "IOS", allowableValues = {"IOS", "WEB", "ANDROID"})
+  private GoogleClientPlatform platform;
 }
