@@ -6,6 +6,7 @@ import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.entity.Provider;
 import com.retro.domain.member.domain.entity.Term;
+import com.retro.domain.member.infrastructure.MemberRepositoryCustomImpl;
 import com.retro.domain.member.infrastructure.MemberRepositoryImpl;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
 import com.retro.domain.retro.domain.entity.Retro;
@@ -21,7 +22,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 @DataJpaTest
-@Import({RetroRepositoryImpl.class, MemberRepositoryImpl.class, RetroRepositoryCustomImpl.class,
+@Import({RetroRepositoryImpl.class, MemberRepositoryImpl.class, MemberRepositoryCustomImpl.class,
+    RetroRepositoryCustomImpl.class,
     QuerydslConfig.class})
 class RetroRepositoryTest {
 
