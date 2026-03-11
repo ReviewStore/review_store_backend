@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.entity.Provider;
 import com.retro.domain.member.domain.entity.Term;
+import com.retro.domain.member.infrastructure.MemberRepositoryCustomImpl;
 import com.retro.domain.member.infrastructure.MemberRepositoryImpl;
+import com.retro.global.config.QuerydslConfig;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +15,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 @DataJpaTest
-@Import(MemberRepositoryImpl.class)
+@Import({MemberRepositoryImpl.class, MemberRepositoryCustomImpl.class, QuerydslConfig.class})
 class MemberRepositoryTest {
 
   @Autowired
