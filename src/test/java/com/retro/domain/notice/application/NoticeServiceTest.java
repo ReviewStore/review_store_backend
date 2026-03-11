@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.retro.domain.notice.application.dto.NoticeCreateRequest;
 import com.retro.domain.notice.application.dto.NoticeCreateResponse;
+import com.retro.domain.notice.application.event.NoticeEventPublisher;
 import com.retro.domain.notice.domain.entity.Notice;
 import com.retro.domain.notice.domain.entity.repository.NoticeRepository;
 import com.retro.global.common.exception.BusinessException;
@@ -26,7 +27,8 @@ class NoticeServiceTest {
 
   @Mock
   private NoticeRepository noticeRepository;
-
+  @Mock
+  private NoticeEventPublisher noticeEventPublisher;
   @InjectMocks
   private NoticeService noticeService;
 
