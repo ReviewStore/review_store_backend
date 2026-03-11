@@ -1,6 +1,7 @@
 package com.retro.domain.auth.application;
 
 import com.retro.domain.auth.application.dto.request.AgreeTermsRequest;
+import com.retro.domain.auth.application.dto.request.GoogleClientPlatform;
 import com.retro.domain.auth.application.dto.response.OAuth2AppleMemberInfo;
 import com.retro.domain.auth.application.dto.response.OAuth2GoogleMemberInfo;
 import com.retro.domain.auth.domain.event.AuthEventPublisher;
@@ -53,9 +54,10 @@ public class AuthService {
         createMessageAboutTempMemberId(uniqueTempId));
   }
 
-  public JwtToken googleLogin(String idToken) {
+  public JwtToken googleLogin(String idToken, GoogleClientPlatform platform) {
     // 1. ID Token 검증 및 사용자 정보 추출
-    OAuth2GoogleMemberInfo googleMemberInfo = googleOAuth2Service.processGoogleLogin(idToken);
+    OAuth2GoogleMemberInfo googleMemberInfo = googleOAuth2Service.processGoogleLogin(idToken,
+        platform);
 
     // 2. DB에서 회원 조회
     Optional<Member> existingMember = findByProvider(

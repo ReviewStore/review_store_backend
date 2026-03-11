@@ -86,7 +86,7 @@ public class AuthController {
   @Operation(summary = "구글 로그인", description = "Google ID Token으로 JWT 토큰을 발급합니다.")
   @PostMapping("/oauth2/login/google")
   public ApiResponse<JwtToken> googleLogin(@RequestBody GoogleLoginRequest request) {
-    JwtToken jwtToken = authService.googleLogin(request.getIdToken());
+    JwtToken jwtToken = authService.googleLogin(request.getIdToken(), request.getPlatform());
     return ApiResponse.success(jwtToken);
   }
 
