@@ -1,6 +1,5 @@
 package com.retro.global.config;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
@@ -57,11 +56,6 @@ public class RabbitNoticeNotificationConfig {
     return QueueBuilder.durable(properties.queue())
         .deadLetterExchange(properties.deadLetterExchange())
         .build();
-  }
-
-  @PostConstruct
-  public void checkRabbitHost() {
-    System.out.println("Rabbit Host: " + environment.getProperty("spring.app.rabbitmq.host"));
   }
 
   @Bean
