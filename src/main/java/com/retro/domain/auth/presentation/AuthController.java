@@ -4,7 +4,9 @@ import com.retro.domain.auth.application.AuthService;
 import com.retro.domain.auth.application.dto.request.AgreeTermsRequest;
 import com.retro.domain.auth.application.dto.request.GoogleLoginRequest;
 import com.retro.domain.auth.application.dto.request.RefreshRequest;
+import com.retro.domain.auth.application.dto.request.TokenValidationRequest;
 import com.retro.domain.auth.application.dto.response.AppleAuthCodeDto;
+import com.retro.domain.auth.application.dto.response.TokenVerificationResponse;
 import com.retro.global.UserAgentHeader;
 import com.retro.global.common.dto.ApiResponse;
 import com.retro.global.common.dto.MemberDevice;
@@ -124,5 +126,13 @@ public class AuthController {
   ) {
     JwtToken newToken = authService.refresh(request.refreshToken());
     return ApiResponse.success(newToken);
+  }
+
+  @Operation(summary = "JWT 토큰 유효성 검증", description = "서버에서 발급한 JWT 토큰의 유효성을 검증합니다.")
+  @PostMapping("/tokens/verifications")
+  public ApiResponse<TokenVerificationResponse> validateToken(
+      @RequestBody @Validated TokenValidationRequest request
+  ) {
+    return ApiResponse.success(authService.validateToken(request.token()));
   }
 }

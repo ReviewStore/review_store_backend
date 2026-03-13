@@ -4,6 +4,7 @@ import com.retro.domain.auth.application.dto.request.AgreeTermsRequest;
 import com.retro.domain.auth.application.dto.request.GoogleClientPlatform;
 import com.retro.domain.auth.application.dto.response.OAuth2AppleMemberInfo;
 import com.retro.domain.auth.application.dto.response.OAuth2GoogleMemberInfo;
+import com.retro.domain.auth.application.dto.response.TokenVerificationResponse;
 import com.retro.domain.auth.domain.event.AuthEventPublisher;
 import com.retro.domain.member.application.exception.MemberNotRegisteredException;
 import com.retro.domain.member.domain.MemberRepository;
@@ -138,6 +139,11 @@ public class AuthService {
     Object tempMemberInfo = redisService.getTempMemberInfo(tempMemberId);
     redisService.removeTempMemberInfo(tempMemberId);
     return tempMemberInfo;
+  }
+
+  public TokenVerificationResponse validateToken(String token) {
+    boolean isExpired = jwtProvider.validateToken(token);
+    return TokenVerificationResponse.of(isExpired);
   }
 
   /**

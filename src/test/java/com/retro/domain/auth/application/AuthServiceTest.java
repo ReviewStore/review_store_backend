@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 
 import com.retro.domain.auth.application.dto.request.AgreeTermsRequest;
 import com.retro.domain.auth.application.dto.response.OAuth2AppleMemberInfo;
+import com.retro.domain.auth.application.dto.response.TokenVerificationResponse;
+import com.retro.domain.auth.application.dto.response.TokenVerificationResponse.VerificationStatus;
 import com.retro.domain.auth.domain.event.AuthEventPublisher;
 import com.retro.domain.member.application.exception.MemberNotRegisteredException;
 import com.retro.domain.member.domain.MemberRepository;
@@ -189,6 +191,29 @@ class AuthServiceTest {
     verify(redisService, times(1)).removeTempMemberInfo(tempMemberId);
     verify(memberRepository, times(0)).save(any(Member.class));
     verify(jwtProvider, times(0)).createToken(any(), anyString());
+  }
+
+  @Test
+  void validateTokenReturnsTrueWhenJwtIsValid() {
+    when(jwtProvider.validateToken("valid-token")).thenReturn(true);
+
+    TokenVerificationResponse tokenVerificationResponse = authService.validateToken("valid-token");
+
+    assertThat(tokenVerificationResponse.message()).isEqualTo(
+        VerificationStatus.VALID.getMessage());
+    verify(jwtProvider, times(1)).validateToken("valid-token");
+  }
+
+  @Test
+  void validateTokenReturnsFalseWhenJwtIsInvalid() {
+    when(jwtProvider.validateToken("invalid-token")).thenReturn(false);
+
+    TokenVerificationResponse tokenVerificationResponse = authService.validateToken(
+        "invalid-token");
+
+    assertThat(tokenVerificationResponse.message()).isEqualTo(
+        VerificationStatus.INVALID.getMessage());
+    verify(jwtProvider, times(1)).validateToken("invalid-token");
   }
 
 }
