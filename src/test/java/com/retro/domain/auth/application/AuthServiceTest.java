@@ -22,10 +22,12 @@ import com.retro.domain.member.domain.entity.Provider;
 import com.retro.domain.member.domain.entity.Term;
 import com.retro.global.common.dto.MemberDevice;
 import com.retro.global.common.enums.DeviceType;
+import com.retro.global.common.exception.BusinessException;
 import com.retro.global.common.exception.ErrorCode;
 import com.retro.global.common.jwt.JwtProvider;
 import com.retro.global.common.jwt.JwtToken;
 import java.util.Optional;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -206,14 +208,14 @@ class AuthServiceTest {
 
   @Test
   void validateTokenReturnsFalseWhenJwtIsInvalid() {
+    // given
     when(jwtProvider.validateToken("invalid-token")).thenReturn(false);
 
-    TokenVerificationResponse tokenVerificationResponse = authService.validateToken(
-        "invalid-token");
+    // when & then
+    Assertions.assertThatThrownBy(() -> authService.validateToken(
+            "invalid-token")).isInstanceOf(BusinessException.class)
+        .hasMessageContaining("유효하지 않은 토큰입니다.");
 
-    assertThat(tokenVerificationResponse.message()).isEqualTo(
-        VerificationStatus.INVALID.getMessage());
-    verify(jwtProvider, times(1)).validateToken("invalid-token");
   }
 
 }
