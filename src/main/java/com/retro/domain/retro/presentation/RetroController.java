@@ -114,7 +114,7 @@ public class RetroController {
 
   @Operation(
           summary = "회고 수정",
-          description = "회고에 대한 내용을 업데이트 합니다."
+          description = "본인이 작성한 회고의 내용을 수정합니다."
   )
   @io.swagger.v3.oas.annotations.responses.ApiResponse(
           responseCode = "200",
@@ -124,8 +124,28 @@ public class RetroController {
           )
   )
   @PutMapping("/{retroId}")
-  public ApiResponse<Void> updateRetro(@PathVariable Long retroId, @RequestBody RetroUpdateRequest request) {
+  public ApiResponse<Void> updateRetro(@PathVariable Long retroId,
+      @RequestBody @Valid RetroUpdateRequest request) {
+    Long memberId = securityUtil.getAuthenticatedUserId();
+    retroService.updateRetro(memberId, retroId, request);
+    return ApiResponse.success();
+  }
 
+  @Operation(
+          summary = "회고 삭제",
+          description = "본인이 작성한 회고를 삭제합니다."
+  )
+  @io.swagger.v3.oas.annotations.responses.ApiResponse(
+          responseCode = "200",
+          description = "성공",
+          content = @io.swagger.v3.oas.annotations.media.Content(
+                  mediaType = MediaType.APPLICATION_JSON_VALUE
+          )
+  )
+  @DeleteMapping("/{retroId}")
+  public ApiResponse<Void> deleteRetro(@PathVariable Long retroId) {
+    Long memberId = securityUtil.getAuthenticatedUserId();
+    retroService.deleteRetro(memberId, retroId);
     return ApiResponse.success();
   }
 }

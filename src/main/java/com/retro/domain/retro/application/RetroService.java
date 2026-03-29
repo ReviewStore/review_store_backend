@@ -4,6 +4,7 @@ import com.retro.domain.member.application.MemberFacade;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
+import com.retro.domain.retro.application.dto.request.RetroUpdateRequest;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
@@ -166,7 +167,41 @@ public class RetroService {
   }
 
   @Transactional
-  public void updateRetro(){
+  public void updateRetro(Long memberId, Long retroId, RetroUpdateRequest request) {
+    Retro retro = retroRepository.findById(retroId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.RETRO_NOT_FOUND));
 
+    validateOwner(retro, memberId);
+
+    retro.update(
+        request.companyName(),
+        request.position(),
+        request.interviewDate(),
+        request.interviewRound(),
+        request.interviewTags(),
+        request.keepText(),
+        request.problemText(),
+        request.tryText(),
+        request.summary()
+    );
+
+    List<InterviewQuestion> newQuestions = request.toQuestionEntities();
+    retro.replaceQuestions(newQuestions);
+  }
+
+  @Transactional
+  public void deleteRetro(Long memberId, Long retroId) {
+    Retro retro = retroRepository.findById(retroId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.RETRO_NOT_FOUND));
+
+    validateOwner(retro, memberId);
+
+    retroRepository.delete(retro);
+  }
+
+  private void validateOwner(Retro retro, Long memberId) {
+    if (!retro.isOwnedBy(memberId)) {
+      throw new BusinessException(ErrorCode.RETRO_NOT_OWNER);
+    }
   }
 }
