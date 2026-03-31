@@ -517,6 +517,34 @@ class RetroServiceTest {
     }
 
     @Test
+    @DisplayName("성공: 질문 목록을 수정하지 않으려고 null로 보내면 기존 질문이 유지된다")
+    void success_updateRetroKeepQuestions_whenQuestionsNull() {
+      // given
+      Long memberId = 1L;
+      Long retroId = 10L;
+
+      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      ReflectionTestUtils.setField(retro, "retroId", retroId);
+
+      InterviewQuestion oldQuestion = InterviewQuestion.of(1, "기술", "기존질문", "기존답변", "좋음", 3);
+      retro.addQuestion(oldQuestion);
+
+      RetroUpdateRequest request = new RetroUpdateRequest(
+          "카카오", "BE", LocalDate.of(2026, 3, 20), "2차", "#Java",
+          "Keep수정", "Problem수정", "Try수정", "요약수정", null
+      );
+
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+
+      // when
+      retroService.updateRetro(memberId, retroId, request);
+
+      // then
+      assertThat(retro.getQuestions()).hasSize(1);
+      assertThat(retro.getQuestions().get(0).getQuestionText()).isEqualTo("기존질문");
+    }
+
+    @Test
     @DisplayName("성공: 질문이 포함된 수정 요청 시 기존 질문이 교체된다")
     void success_updateRetroWithQuestions() {
       // given

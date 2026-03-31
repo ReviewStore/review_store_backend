@@ -186,7 +186,9 @@ public class RetroService {
     );
 
     List<InterviewQuestion> newQuestions = request.toQuestionEntities();
-    retro.replaceQuestions(newQuestions);
+    if (newQuestions != null) {
+      retro.replaceQuestions(newQuestions);
+    }
   }
 
   @Transactional

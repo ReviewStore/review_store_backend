@@ -32,10 +32,11 @@ public record RetroUpdateRequest(
 
   public List<InterviewQuestion> toQuestionEntities() {
     if (questions == null) {
-      return List.of();
+      return null;
     }
     return questions.stream()
         .map(QuestionRequest::toEntity)
         .toList();
   }
+
 }

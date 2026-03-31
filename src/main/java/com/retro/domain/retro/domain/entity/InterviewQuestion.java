@@ -73,4 +73,14 @@ public class InterviewQuestion {
   protected void assignToRetro(Retro retro) {
     this.retro = retro;
   }
+
+  public void update(int questionOrder, String questionType, String questionText,
+      String answerText, String interviewerReaction, int satisfactionScore) {
+    this.questionOrder = questionOrder;
+    this.questionType = questionType;
+    this.questionText = questionText;
+    this.answerText = answerText;
+    this.interviewerReaction = interviewerReaction;
+    this.satisfactionScore = satisfactionScore;
+  }
 }
