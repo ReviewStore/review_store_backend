@@ -144,4 +144,29 @@ public class Retro extends BaseEntity {
     this.reports.add(report);
     report.addRetro(this);
   }
+
+  public boolean isOwnedBy(Long memberId) {
+    return this.memberId.equals(memberId);
+  }
+
+  public void update(String companyName, String position, LocalDate interviewDate,
+      String interviewRound, String interviewTags, String keepText,
+      String problemText, String tryText, String summary) {
+    this.companyName = companyName;
+    this.position = position;
+    this.interviewDate = interviewDate;
+    this.interviewRound = interviewRound;
+    this.interviewTags = interviewTags;
+    this.keepText = keepText;
+    this.problemText = problemText;
+    this.tryText = tryText;
+    this.summary = summary;
+  }
+
+  public void replaceQuestions(List<InterviewQuestion> newQuestions) {
+    this.questions.clear();
+    if (newQuestions != null) {
+      newQuestions.forEach(this::addQuestion);
+    }
+  }
 }

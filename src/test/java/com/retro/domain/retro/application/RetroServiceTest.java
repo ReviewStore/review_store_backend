@@ -16,6 +16,7 @@ import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.QuestionRequest;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
+import com.retro.domain.retro.application.dto.request.RetroUpdateRequest;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
@@ -481,5 +482,207 @@ class RetroServiceTest {
     }
   }
 
+  @Nested
+  @DisplayName("회고 수정(updateRetro)")
+  class UpdateRetro {
+
+    @Test
+    @DisplayName("성공: 본인 회고를 수정하면 필드가 업데이트된다")
+    void success_updateRetro() {
+      // given
+      Long memberId = 1L;
+      Long retroId = 10L;
+
+      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      ReflectionTestUtils.setField(retro, "retroId", retroId);
+
+      RetroUpdateRequest request = new RetroUpdateRequest(
+          "카카오", "BE", LocalDate.of(2026, 3, 20), "2차", "#Java",
+          "Keep수정", "Problem수정", "Try수정", "요약수정", null
+      );
+
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+
+      // when
+      retroService.updateRetro(memberId, retroId, request);
+
+      // then
+      assertThat(retro.getCompanyName()).isEqualTo("카카오");
+      assertThat(retro.getPosition()).isEqualTo("BE");
+      assertThat(retro.getInterviewRound()).isEqualTo("2차");
+      assertThat(retro.getKeepText()).isEqualTo("Keep수정");
+      assertThat(retro.getProblemText()).isEqualTo("Problem수정");
+      assertThat(retro.getTryText()).isEqualTo("Try수정");
+      assertThat(retro.getSummary()).isEqualTo("요약수정");
+    }
+
+    @Test
+    @DisplayName("성공: 질문 목록을 수정하지 않으려고 null로 보내면 기존 질문이 유지된다")
+    void success_updateRetroKeepQuestions_whenQuestionsNull() {
+      // given
+      Long memberId = 1L;
+      Long retroId = 10L;
+
+      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      ReflectionTestUtils.setField(retro, "retroId", retroId);
+
+      InterviewQuestion oldQuestion = InterviewQuestion.of(1, "기술", "기존질문", "기존답변", "좋음", 3);
+      retro.addQuestion(oldQuestion);
+
+      RetroUpdateRequest request = new RetroUpdateRequest(
+          "카카오", "BE", LocalDate.of(2026, 3, 20), "2차", "#Java",
+          "Keep수정", "Problem수정", "Try수정", "요약수정", null
+      );
+
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+
+      // when
+      retroService.updateRetro(memberId, retroId, request);
+
+      // then
+      assertThat(retro.getQuestions()).hasSize(1);
+      assertThat(retro.getQuestions().get(0).getQuestionText()).isEqualTo("기존질문");
+    }
+
+    @Test
+    @DisplayName("성공: 질문이 포함된 수정 요청 시 기존 질문이 교체된다")
+    void success_updateRetroWithQuestions() {
+      // given
+      Long memberId = 1L;
+      Long retroId = 10L;
+
+      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      ReflectionTestUtils.setField(retro, "retroId", retroId);
+
+      InterviewQuestion oldQuestion = InterviewQuestion.of(1, "기술", "기존질문", "기존답변", "좋음", 3);
+      retro.addQuestion(oldQuestion);
+
+      List<QuestionRequest> newQuestions = List.of(
+          QuestionRequest.of(1, "기술", "새질문1", "새답변1", "좋음", 5),
+          QuestionRequest.of(2, "인성", "새질문2", "새답변2", "보통", 3)
+      );
+
+      RetroUpdateRequest request = new RetroUpdateRequest(
+          "카카오", "BE", LocalDate.of(2026, 3, 20), "2차", "#Java",
+          "Keep수정", "Problem수정", "Try수정", "요약수정", newQuestions
+      );
+
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+
+      // when
+      retroService.updateRetro(memberId, retroId, request);
+
+      // then
+      assertThat(retro.getQuestions()).hasSize(2);
+      assertThat(retro.getQuestions().get(0).getQuestionText()).isEqualTo("새질문1");
+      assertThat(retro.getQuestions().get(1).getQuestionText()).isEqualTo("새질문2");
+    }
+
+    @Test
+    @DisplayName("실패: 존재하지 않는 회고를 수정하면 RETRO_NOT_FOUND 예외를 던진다")
+    void fail_retroNotFound() {
+      // given
+      Long memberId = 1L;
+      Long retroId = 999L;
+
+      RetroUpdateRequest request = new RetroUpdateRequest(
+          "카카오", "BE", LocalDate.of(2026, 3, 20), "2차", "#Java",
+          "K", "P", "T", "요약", null
+      );
+
+      given(retroRepository.findById(retroId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> retroService.updateRetro(memberId, retroId, request))
+          .isInstanceOf(BusinessException.class)
+          .hasFieldOrPropertyWithValue("errorCode", ErrorCode.RETRO_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("실패: 본인 회고가 아닌 경우 RETRO_NOT_OWNER 예외를 던진다")
+    void fail_notOwner() {
+      // given
+      Long memberId = 1L;
+      Long otherMemberId = 2L;
+      Long retroId = 10L;
+
+      Retro retro = Retro.of(otherMemberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      ReflectionTestUtils.setField(retro, "retroId", retroId);
+
+      RetroUpdateRequest request = new RetroUpdateRequest(
+          "카카오", "BE", LocalDate.of(2026, 3, 20), "2차", "#Java",
+          "K", "P", "T", "요약", null
+      );
+
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+
+      // when & then
+      assertThatThrownBy(() -> retroService.updateRetro(memberId, retroId, request))
+          .isInstanceOf(BusinessException.class)
+          .hasFieldOrPropertyWithValue("errorCode", ErrorCode.RETRO_NOT_OWNER);
+    }
+  }
+
+  @Nested
+  @DisplayName("회고 삭제(deleteRetro)")
+  class DeleteRetro {
+
+    @Test
+    @DisplayName("성공: 본인 회고를 삭제한다")
+    void success_deleteRetro() {
+      // given
+      Long memberId = 1L;
+      Long retroId = 10L;
+
+      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      ReflectionTestUtils.setField(retro, "retroId", retroId);
+
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+
+      // when
+      retroService.deleteRetro(memberId, retroId);
+
+      // then
+      verify(retroRepository).delete(retro);
+    }
+
+    @Test
+    @DisplayName("실패: 존재하지 않는 회고를 삭제하면 RETRO_NOT_FOUND 예외를 던진다")
+    void fail_retroNotFound() {
+      // given
+      Long memberId = 1L;
+      Long retroId = 999L;
+
+      given(retroRepository.findById(retroId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> retroService.deleteRetro(memberId, retroId))
+          .isInstanceOf(BusinessException.class)
+          .hasFieldOrPropertyWithValue("errorCode", ErrorCode.RETRO_NOT_FOUND);
+
+      verify(retroRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("실패: 본인 회고가 아닌 경우 RETRO_NOT_OWNER 예외를 던진다")
+    void fail_notOwner() {
+      // given
+      Long memberId = 1L;
+      Long otherMemberId = 2L;
+      Long retroId = 10L;
+
+      Retro retro = Retro.of(otherMemberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      ReflectionTestUtils.setField(retro, "retroId", retroId);
+
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+
+      // when & then
+      assertThatThrownBy(() -> retroService.deleteRetro(memberId, retroId))
+          .isInstanceOf(BusinessException.class)
+          .hasFieldOrPropertyWithValue("errorCode", ErrorCode.RETRO_NOT_OWNER);
+
+      verify(retroRepository, never()).delete(any());
+    }
+  }
 
 }

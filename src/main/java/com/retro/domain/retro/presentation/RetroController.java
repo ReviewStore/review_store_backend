@@ -3,6 +3,7 @@ package com.retro.domain.retro.presentation;
 import com.retro.domain.retro.application.RetroService;
 import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
+import com.retro.domain.retro.application.dto.request.RetroUpdateRequest;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroCreateResponse;
 import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
@@ -15,13 +16,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Retro API", description = "회고 작성 및 조회 API")
 @RestController
@@ -97,7 +92,6 @@ public class RetroController {
           mediaType = MediaType.APPLICATION_JSON_VALUE
       )
   )
-
   @GetMapping("/my-retros")
   public ApiResponse<RetroCursorPageResponse> getMyRetros(
       @RequestParam(required = false) Long cursorId,
@@ -115,6 +109,43 @@ public class RetroController {
   public ApiResponse<Void> reportRetro(@PathVariable Long retroId) {
     Long reporterId = securityUtil.getAuthenticatedUserId();
     retroService.reportRetro(reporterId, retroId);
+    return ApiResponse.success();
+  }
+
+  @Operation(
+          summary = "회고 수정",
+          description = "본인이 작성한 회고의 내용을 수정합니다."
+  )
+  @io.swagger.v3.oas.annotations.responses.ApiResponse(
+          responseCode = "200",
+          description = "성공",
+          content = @io.swagger.v3.oas.annotations.media.Content(
+                  mediaType = MediaType.APPLICATION_JSON_VALUE
+          )
+  )
+  @PutMapping("/{retroId}")
+  public ApiResponse<Void> updateRetro(@PathVariable Long retroId,
+      @RequestBody @Valid RetroUpdateRequest request) {
+    Long memberId = securityUtil.getAuthenticatedUserId();
+    retroService.updateRetro(memberId, retroId, request);
+    return ApiResponse.success();
+  }
+
+  @Operation(
+          summary = "회고 삭제",
+          description = "본인이 작성한 회고를 삭제합니다."
+  )
+  @io.swagger.v3.oas.annotations.responses.ApiResponse(
+          responseCode = "200",
+          description = "성공",
+          content = @io.swagger.v3.oas.annotations.media.Content(
+                  mediaType = MediaType.APPLICATION_JSON_VALUE
+          )
+  )
+  @DeleteMapping("/{retroId}")
+  public ApiResponse<Void> deleteRetro(@PathVariable Long retroId) {
+    Long memberId = securityUtil.getAuthenticatedUserId();
+    retroService.deleteRetro(memberId, retroId);
     return ApiResponse.success();
   }
 }
