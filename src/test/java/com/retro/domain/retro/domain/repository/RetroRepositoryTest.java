@@ -15,6 +15,7 @@ import com.retro.domain.retro.infrastructure.RetroRepositoryImpl;
 import com.retro.global.config.QuerydslConfig;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,46 @@ class RetroRepositoryTest {
   private MemberRepository memberRepository;
   @Autowired
   private EntityManager em; // Cascade를 확실히 검증하기 위해 필요
+
+
+  @Test
+  @DisplayName("커뮤니티 피드 조회: 공개 회원의 블라인드되지 않은 회고만 조회된다.")
+  void findPublicRetrosWithCursor_filtersByMemberPublicAndBlinded() {
+    // given
+    int querySize = 10;
+    Member publicMember = createAndSaveMember();
+    publicMember.openOwnPublication();
+
+    Member privateMember = createAndSaveMember();
+
+    Retro publicRetro = Retro.of(publicMember.getId(), "네이버", "BE", LocalDate.now(), "1차", "#Java",
+        "K", "P",
+        "T", "공개");
+    Retro privateRetro = Retro.of(privateMember.getId(), "카카오", "FE", LocalDate.now(), "1차",
+        "#React", "K", "P",
+        "T", "비공개");
+    Retro blindedRetro = Retro.of(publicMember.getId(), "라인", "iOS", LocalDate.now(), "1차",
+        "#Swift", "K", "P",
+        "T", "블라인드");
+    blindedRetro.report();
+    blindedRetro.report();
+
+    memberRepository.save(publicMember);
+    memberRepository.save(privateMember);
+    retroRepository.save(publicRetro);
+    retroRepository.save(privateRetro);
+    retroRepository.save(blindedRetro);
+    em.flush();
+    em.clear();
+
+    // when
+    var result = retroRepository.findPublicRetrosWithCursor(null, querySize);
+
+    // then
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst().getCompanyName()).isEqualTo("네이버");
+    assertThat(result.getFirst().getPosition()).isEqualTo("BE");
+  }
 
   @Test
   @DisplayName("Cascade.ALL 검증: 회고를 저장하면 별도의 저장 호출 없이 면접 질문도 DB에 저장된다.")
@@ -108,7 +149,7 @@ class RetroRepositoryTest {
   // Member 생성 헬퍼 메서드
   private Member createAndSaveMember() {
     Term term = Term.from(true);
-    Member member = Member.of(Provider.KAKAO, "test-id", "닉네임", term);
+    Member member = Member.of(Provider.KAKAO, UUID.randomUUID().toString(), "닉네임", term);
     return memberRepository.save(member);
   }
 }

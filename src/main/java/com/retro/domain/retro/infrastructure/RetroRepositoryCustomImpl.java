@@ -1,12 +1,15 @@
 package com.retro.domain.retro.infrastructure;
 
+import static com.retro.domain.member.domain.entity.QMember.member;
 import static com.retro.domain.retro.domain.entity.QRetro.retro;
 import static com.retro.domain.retro.domain.entity.QRetroReport.retroReport;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.retro.domain.retro.domain.entity.Retro;
 import com.retro.domain.retro.domain.entity.RetroReport;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -45,5 +48,33 @@ public class RetroRepositoryCustomImpl implements RetroRepositoryCustom {
         .fetchOne();
 
     return Optional.ofNullable(report);
+  }
+
+  @Override
+  public List<Retro> findPublicRetrosWithCursor(Long cursorId, int size) {
+    return jpaQueryFactory
+        .selectFrom(retro)
+        .join(member).on(retro.memberId.eq(member.id))
+        .where(buildPublicFeedPredicate(cursorId))
+        .orderBy(retro.retroId.desc())
+        .limit(size)
+        .fetch();
+  }
+
+  private BooleanBuilder buildPublicFeedPredicate(Long cursorId) {
+    BooleanBuilder predicate = new BooleanBuilder();
+    predicate.and(member.isPublic.isTrue());
+    predicate.and(retro.blinded.isFalse());
+
+    return appendCursorCondition(predicate, cursorId);
+  }
+
+  private BooleanBuilder appendCursorCondition(BooleanBuilder predicate, Long cursorId) {
+    if (Objects.isNull(cursorId)) {
+      return predicate;
+    }
+
+    predicate.and(retro.retroId.lt(cursorId));
+    return predicate;
   }
 }
