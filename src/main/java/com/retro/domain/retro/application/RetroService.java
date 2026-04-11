@@ -164,4 +164,9 @@ public class RetroService {
     }
     
   }
+
+  public void searchFilter(){
+
+  }
+
 }

@@ -117,5 +117,12 @@ public class RetroController {
     retroService.reportRetro(reporterId, retroId);
     return ApiResponse.success();
   }
+
+  @GetMapping("/search-filters")
+  public ApiResponse<?> searchFilter(){
+    Long userId = securityUtil.getAuthenticatedUserId();
+    retroService.searchFilter();
+    return ApiResponse.success();
+  }
 }
 
