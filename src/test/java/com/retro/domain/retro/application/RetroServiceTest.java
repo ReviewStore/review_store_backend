@@ -17,6 +17,7 @@ import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.QuestionRequest;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
 import com.retro.domain.retro.application.dto.request.RetroUpdateRequest;
+import com.retro.domain.retro.application.dto.response.CommunityRetroFeedCursorPageResponse;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
@@ -493,7 +494,8 @@ class RetroServiceTest {
       Long memberId = 1L;
       Long retroId = 10L;
 
-      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T",
+          "요약");
       ReflectionTestUtils.setField(retro, "retroId", retroId);
 
       RetroUpdateRequest request = new RetroUpdateRequest(
@@ -523,7 +525,8 @@ class RetroServiceTest {
       Long memberId = 1L;
       Long retroId = 10L;
 
-      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T",
+          "요약");
       ReflectionTestUtils.setField(retro, "retroId", retroId);
 
       InterviewQuestion oldQuestion = InterviewQuestion.of(1, "기술", "기존질문", "기존답변", "좋음", 3);
@@ -551,7 +554,8 @@ class RetroServiceTest {
       Long memberId = 1L;
       Long retroId = 10L;
 
-      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T",
+          "요약");
       ReflectionTestUtils.setField(retro, "retroId", retroId);
 
       InterviewQuestion oldQuestion = InterviewQuestion.of(1, "기술", "기존질문", "기존답변", "좋음", 3);
@@ -606,7 +610,8 @@ class RetroServiceTest {
       Long otherMemberId = 2L;
       Long retroId = 10L;
 
-      Retro retro = Retro.of(otherMemberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      Retro retro = Retro.of(otherMemberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P",
+          "T", "요약");
       ReflectionTestUtils.setField(retro, "retroId", retroId);
 
       RetroUpdateRequest request = new RetroUpdateRequest(
@@ -634,7 +639,8 @@ class RetroServiceTest {
       Long memberId = 1L;
       Long retroId = 10L;
 
-      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      Retro retro = Retro.of(memberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T",
+          "요약");
       ReflectionTestUtils.setField(retro, "retroId", retroId);
 
       given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
@@ -671,7 +677,8 @@ class RetroServiceTest {
       Long otherMemberId = 2L;
       Long retroId = 10L;
 
-      Retro retro = Retro.of(otherMemberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P", "T", "요약");
+      Retro retro = Retro.of(otherMemberId, "네이버", "FE", LocalDate.now(), "1차", "#React", "K", "P",
+          "T", "요약");
       ReflectionTestUtils.setField(retro, "retroId", retroId);
 
       given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
@@ -684,5 +691,64 @@ class RetroServiceTest {
       verify(retroRepository, never()).delete(any());
     }
   }
+
+  @Nested
+  @DisplayName("커뮤니티 피드 조회(getCommunityFeed)")
+  class GetCommunityFeed {
+
+    private static final int REQUEST_SIZE = 2;
+    private static final int PAGE_SIZE_PLUS_ONE = 3;
+
+    @Test
+    @DisplayName("성공: 익명 커뮤니티 카드 목록을 커서 기반으로 반환한다")
+    void success_getCommunityFeed() {
+      // given
+      Retro newest = Retro.of(10L, "네이버", "백엔드", LocalDate.now(), "2차", "#Spring", "K", "P", "T",
+          "요약1");
+      Retro oldest = Retro.of(11L, "카카오", "프론트엔드", LocalDate.now(), "1차", "#React", "K", "P", "T",
+          "요약2");
+      ReflectionTestUtils.setField(newest, "retroId", 101L);
+      ReflectionTestUtils.setField(oldest, "retroId", 99L);
+
+      given(retroRepository.findPublicRetrosWithCursor(null, PAGE_SIZE_PLUS_ONE))
+          .willReturn(List.of(newest, oldest));
+
+      // when
+      CommunityRetroFeedCursorPageResponse response = retroService.getCommunityFeed(null,
+          REQUEST_SIZE);
+
+      // then
+      assertThat(response.retros()).hasSize(2);
+      assertThat(response.retros().get(0).company()).isEqualTo("네이버");
+      assertThat(response.retros().get(0).position()).isEqualTo("백엔드");
+      assertThat(response.nextCursor()).isNull();
+      assertThat(response.hasNext()).isFalse();
+    }
+
+    @Test
+    @DisplayName("성공: 페이지 사이즈보다 많으면 hasNext=true와 nextCursor를 반환한다")
+    void success_getCommunityFeed_withPaging() {
+      // given
+      Retro retro1 = Retro.of(10L, "A", "BE", LocalDate.now(), "1차", "#A", "K", "P", "T", "S1");
+      Retro retro2 = Retro.of(11L, "B", "FE", LocalDate.now(), "1차", "#B", "K", "P", "T", "S2");
+      Retro retro3 = Retro.of(12L, "C", "DE", LocalDate.now(), "1차", "#C", "K", "P", "T", "S3");
+      ReflectionTestUtils.setField(retro1, "retroId", 103L);
+      ReflectionTestUtils.setField(retro2, "retroId", 102L);
+      ReflectionTestUtils.setField(retro3, "retroId", 101L);
+
+      given(retroRepository.findPublicRetrosWithCursor(null, PAGE_SIZE_PLUS_ONE))
+          .willReturn(List.of(retro1, retro2, retro3));
+
+      // when
+      CommunityRetroFeedCursorPageResponse response = retroService.getCommunityFeed(null,
+          REQUEST_SIZE);
+
+      // then
+      assertThat(response.retros()).hasSize(2);
+      assertThat(response.hasNext()).isTrue();
+      assertThat(response.nextCursor()).isEqualTo(102L);
+    }
+  }
+
 
 }
