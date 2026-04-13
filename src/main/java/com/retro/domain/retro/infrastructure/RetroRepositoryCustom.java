@@ -11,4 +11,7 @@ public interface RetroRepositoryCustom {
 
   Optional<RetroReport> existsReportByRetroAndReporter(Long retroId, Long reporterMemberId);
 
+  List<Retro> searchCommunityFeed(String keyword, String position, String interviewRound,
+      Long cursorId, int size);
+
 }

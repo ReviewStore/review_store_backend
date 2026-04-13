@@ -4,6 +4,8 @@ import com.retro.domain.member.application.MemberFacade;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
+import com.retro.domain.retro.application.dto.response.CommunityRetroCardResponse;
+import com.retro.domain.retro.application.dto.response.CommunityRetroFeedCursorPageResponse;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
@@ -165,8 +167,20 @@ public class RetroService {
     
   }
 
-  public void searchFilter(){
-
+  public CommunityRetroFeedCursorPageResponse searchCommunityFeed(
+      String keyword, String position, String interviewRound, Long cursorId, int size) {
+    final int pageSizePlusOne = size + 1;
+    List<Retro> retros = retroRepository.searchCommunityFeed(keyword, position, interviewRound,
+        cursorId, pageSizePlusOne);
+    boolean hasNext = hasMoreRetros(size, retros);
+    if (hasNext) {
+      retros = sliceRetros(size, retros);
+    }
+    List<CommunityRetroCardResponse> responses = retros.stream()
+        .map(CommunityRetroCardResponse::from)
+        .toList();
+    Long nextCursor = getNextCursor(hasNext, retros);
+    return CommunityRetroFeedCursorPageResponse.of(responses, nextCursor, hasNext);
   }
 
 }

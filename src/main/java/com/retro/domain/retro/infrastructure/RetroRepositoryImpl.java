@@ -45,4 +45,11 @@ public class RetroRepositoryImpl implements RetroRepository {
   public Optional<RetroReport> existsReportByRetroAndReporter(Long retroId, Long reporterMemberId) {
     return retroRepositoryCustom.existsReportByRetroAndReporter(retroId, reporterMemberId);
   }
+
+  @Override
+  public List<Retro> searchCommunityFeed(String keyword, String position, String interviewRound,
+      Long cursorId, int size) {
+    return retroRepositoryCustom.searchCommunityFeed(keyword, position, interviewRound, cursorId,
+        size);
+  }
 }
