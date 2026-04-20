@@ -35,6 +35,9 @@ public class MemberService {
     Member member = getMember(memberId);
     if (isPublic) {
       member.openOwnPublication();
+      if (member.hasLimitedPostReadPermission()) {
+        member.grantPostReadPermission();
+      }
       return;
     }
     member.closeOwnPublication();

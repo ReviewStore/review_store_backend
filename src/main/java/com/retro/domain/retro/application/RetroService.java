@@ -87,6 +87,9 @@ public class RetroService {
     if (retro.isCreatedByViewer(authorId, viewerId)) {
       return RetroDetailResponse.from(retro);
     }
+    if (!viewer.canViewOtherRetros()) {
+      throw new BusinessException(ErrorCode.RETRO_VIEW_NOT_PERMITTED);
+    }
     if (viewer.isPostReadCountExceeded()) {
       throw new BusinessException(ErrorCode.RETRO_READ_POINT_EXCEEDED);
     }

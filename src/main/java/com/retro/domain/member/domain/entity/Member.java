@@ -126,6 +126,10 @@ public class Member extends BaseEntity {
         && this.remainingRetroReadCount == 1;
   }
 
+  public boolean canViewOtherRetros() {
+    return Boolean.TRUE.equals(this.isPublic);
+  }
+
   public void updateNickname(String nickname) {
     this.nickname = nickname;
   }
