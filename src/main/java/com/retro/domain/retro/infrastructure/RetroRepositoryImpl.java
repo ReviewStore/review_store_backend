@@ -32,6 +32,11 @@ public class RetroRepositoryImpl implements RetroRepository {
   }
 
   @Override
+  public List<Retro> findPublicRetrosWithCursor(Long cursorId, int size) {
+    return retroRepositoryCustom.findPublicRetrosWithCursor(cursorId, size);
+  }
+
+  @Override
   public void delete(Retro retro) {
     retroJPARepository.delete(retro);
   }

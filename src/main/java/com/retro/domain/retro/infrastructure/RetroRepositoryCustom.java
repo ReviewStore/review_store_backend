@@ -14,4 +14,6 @@ public interface RetroRepositoryCustom {
   List<Retro> searchCommunityFeed(String keyword, String position, String interviewRound,
       Long cursorId, int size);
 
+  List<Retro> findPublicRetrosWithCursor(Long cursorId, int size);
+
 }

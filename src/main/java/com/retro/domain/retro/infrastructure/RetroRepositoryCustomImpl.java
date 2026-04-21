@@ -90,4 +90,32 @@ public class RetroRepositoryCustomImpl implements RetroRepositoryCustom {
   private boolean isBlank(String value) {
     return Objects.nonNull(value) && !value.isBlank();
   }
+
+  @Override
+  public List<Retro> findPublicRetrosWithCursor(Long cursorId, int size) {
+    return jpaQueryFactory
+        .selectFrom(retro)
+        .join(member).on(retro.memberId.eq(member.id))
+        .where(buildPublicFeedPredicate(cursorId))
+        .orderBy(retro.retroId.desc())
+        .limit(size)
+        .fetch();
+  }
+
+  private BooleanBuilder buildPublicFeedPredicate(Long cursorId) {
+    BooleanBuilder predicate = new BooleanBuilder();
+    predicate.and(member.isPublic.isTrue());
+    predicate.and(retro.blinded.isFalse());
+
+    return appendCursorCondition(predicate, cursorId);
+  }
+
+  private BooleanBuilder appendCursorCondition(BooleanBuilder predicate, Long cursorId) {
+    if (Objects.isNull(cursorId)) {
+      return predicate;
+    }
+
+    predicate.and(retro.retroId.lt(cursorId));
+    return predicate;
+  }
 }

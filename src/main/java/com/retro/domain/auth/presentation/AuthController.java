@@ -7,6 +7,7 @@ import com.retro.domain.auth.application.dto.request.RefreshRequest;
 import com.retro.domain.auth.application.dto.request.TokenValidationRequest;
 import com.retro.domain.auth.application.dto.response.AppleAuthCodeDto;
 import com.retro.domain.auth.application.dto.response.TokenVerificationResponse;
+import com.retro.domain.auth.application.dto.response.TokenVerificationResponse.VerificationStatus;
 import com.retro.global.UserAgentHeader;
 import com.retro.global.common.dto.ApiResponse;
 import com.retro.global.common.dto.MemberDevice;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -133,6 +135,12 @@ public class AuthController {
   public ApiResponse<TokenVerificationResponse> validateToken(
       @RequestBody @Validated TokenValidationRequest request
   ) {
+    TokenVerificationResponse response = authService.validateToken(
+        request.token());
+    if (Objects.equals(response.message(), VerificationStatus.VALID.getMessage())) {
+      return ApiResponse.success(authService.validateToken(request.token()));
+    }
+
     return ApiResponse.success(authService.validateToken(request.token()));
   }
 }
