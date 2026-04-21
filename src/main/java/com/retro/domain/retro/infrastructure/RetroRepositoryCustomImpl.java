@@ -68,16 +68,16 @@ public class RetroRepositoryCustomImpl implements RetroRepositoryCustom {
     predicate.and(member.isPublic.isTrue());
     predicate.and(retro.blinded.isFalse());
 
-    if (isBlank(keyword)) {
+    if (hasValue(keyword)) {
       predicate.and(
           retro.companyName.containsIgnoreCase(keyword)
               .or(retro.interviewTags.containsIgnoreCase(keyword))
       );
     }
-    if (isBlank(position)) {
+    if (hasValue(position)) {
       predicate.and(retro.position.containsIgnoreCase(position));
     }
-    if (isBlank(interviewRound)) {
+    if (hasValue(interviewRound)) {
       predicate.and(retro.interviewRound.eq(interviewRound));
     }
     if (!Objects.isNull(cursorId)) {
@@ -87,7 +87,7 @@ public class RetroRepositoryCustomImpl implements RetroRepositoryCustom {
     return predicate;
   }
 
-  private boolean isBlank(String value) {
+  private boolean hasValue(String value) {
     return Objects.nonNull(value) && !value.isBlank();
   }
 
