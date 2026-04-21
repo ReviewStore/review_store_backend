@@ -142,8 +142,12 @@ public class AuthService {
   }
 
   public TokenVerificationResponse validateToken(String token) {
-    boolean isExpired = jwtProvider.validateToken(token);
-    return TokenVerificationResponse.of(isExpired);
+
+    boolean isValidToken = jwtProvider.validateToken(token);
+    if (!isValidToken) {
+      throw new BusinessException(ErrorCode.INVALID_TOKEN);
+    }
+    return TokenVerificationResponse.of(isValidToken);
   }
 
   /**

@@ -4,6 +4,9 @@ import com.retro.domain.member.application.MemberFacade;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
+import com.retro.domain.retro.application.dto.request.RetroUpdateRequest;
+import com.retro.domain.retro.application.dto.response.CommunityRetroCardResponse;
+import com.retro.domain.retro.application.dto.response.CommunityRetroFeedCursorPageResponse;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
@@ -165,6 +168,63 @@ public class RetroService {
     if (isBlinded) {
       retroEventPublisher.publishRetroBlindedEvent(RetroBlindedEvent.of(retro));
     }
-    
+
+  }
+
+  @Transactional
+  public void updateRetro(Long memberId, Long retroId, RetroUpdateRequest request) {
+    Retro retro = retroRepository.findById(retroId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.RETRO_NOT_FOUND));
+
+    validateOwner(retro, memberId);
+
+    retro.update(
+        request.companyName(),
+        request.position(),
+        request.interviewDate(),
+        request.interviewRound(),
+        request.interviewTags(),
+        request.keepText(),
+        request.problemText(),
+        request.tryText(),
+        request.summary()
+    );
+
+    List<InterviewQuestion> newQuestions = request.toQuestionEntities();
+    if (newQuestions != null) {
+      retro.replaceQuestions(newQuestions);
+    }
+  }
+
+  @Transactional
+  public void deleteRetro(Long memberId, Long retroId) {
+    Retro retro = retroRepository.findById(retroId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.RETRO_NOT_FOUND));
+
+    validateOwner(retro, memberId);
+
+    retroRepository.delete(retro);
+  }
+
+  private void validateOwner(Retro retro, Long memberId) {
+    if (!retro.isOwnedBy(memberId)) {
+      throw new BusinessException(ErrorCode.RETRO_NOT_OWNER);
+    }
+  }
+
+  public CommunityRetroFeedCursorPageResponse getCommunityFeed(Long cursorId, int size) {
+    final int pageSizePlusOne = size + 1;
+    List<Retro> retros = retroRepository.findPublicRetrosWithCursor(cursorId, pageSizePlusOne);
+    boolean hasNext = hasMoreRetros(size, retros);
+
+    if (hasNext) {
+      retros = sliceRetros(size, retros);
+    }
+
+    List<CommunityRetroCardResponse> responses = retros.stream()
+        .map(CommunityRetroCardResponse::from)
+        .toList();
+    Long nextCursor = getNextCursor(hasNext, retros);
+    return CommunityRetroFeedCursorPageResponse.of(responses, nextCursor, hasNext);
   }
 }
