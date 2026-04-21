@@ -3,7 +3,6 @@ package com.retro.domain.retro.presentation;
 import com.retro.domain.retro.application.RetroService;
 import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
-import com.retro.domain.retro.application.dto.response.CommunityRetroFeedCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.RetroUpdateRequest;
 import com.retro.domain.retro.application.dto.response.CommunityRetroFeedCursorPageResponse;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;

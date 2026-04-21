@@ -16,7 +16,6 @@ import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.retro.application.dto.RetroCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.QuestionRequest;
 import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
-import com.retro.domain.retro.application.dto.response.CommunityRetroFeedCursorPageResponse;
 import com.retro.domain.retro.application.dto.request.RetroUpdateRequest;
 import com.retro.domain.retro.application.dto.response.CommunityRetroFeedCursorPageResponse;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;

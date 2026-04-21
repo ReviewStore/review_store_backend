@@ -7,8 +7,6 @@ import com.retro.domain.retro.application.dto.request.RetroCreateRequest;
 import com.retro.domain.retro.application.dto.request.RetroUpdateRequest;
 import com.retro.domain.retro.application.dto.response.CommunityRetroCardResponse;
 import com.retro.domain.retro.application.dto.response.CommunityRetroFeedCursorPageResponse;
-import com.retro.domain.retro.application.dto.response.CommunityRetroCardResponse;
-import com.retro.domain.retro.application.dto.response.CommunityRetroFeedCursorPageResponse;
 import com.retro.domain.retro.application.dto.response.KeywordResponse;
 import com.retro.domain.retro.application.dto.response.RetroDetailResponse;
 import com.retro.domain.retro.domain.entity.InterviewQuestion;
