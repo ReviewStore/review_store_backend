@@ -8,6 +8,7 @@ public record CommunityRetroCardResponse(
     String company,
     String position,
     LocalDate interviewDate,
+    String interviewRound,
     String tags,
     String summary
 ) {
@@ -18,6 +19,7 @@ public record CommunityRetroCardResponse(
         retro.getCompanyName(),
         retro.getPosition(),
         retro.getInterviewDate(),
+        retro.getInterviewRound(),
         retro.getInterviewTags(),
         retro.getSummary()
     );

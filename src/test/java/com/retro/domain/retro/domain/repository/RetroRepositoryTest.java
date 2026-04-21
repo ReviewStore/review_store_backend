@@ -15,8 +15,10 @@ import com.retro.domain.retro.infrastructure.RetroRepositoryImpl;
 import com.retro.global.config.QuerydslConfig;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -146,10 +148,158 @@ class RetroRepositoryTest {
     assertThat(deletedQuestion).isNull();
   }
 
+  @Nested
+  @DisplayName("커뮤니티 피드 검색/필터링(searchCommunityFeed)")
+  class SearchCommunityFeed {
+
+    @Test
+    @DisplayName("성공: 조건 없이 조회하면 공개 회원의 비블라인드 회고만 반환한다")
+    void noFilter_returnsOnlyPublicAndNotBlinded() {
+      // given
+      Member publicMember = createPublicMember();
+      Member privateMember = createAndSaveMember();
+
+      saveRetro(publicMember.getId(), "네이버", "백엔드", "1차", "#Java");
+      saveRetro(privateMember.getId(), "카카오", "프론트엔드", "1차", "#React");
+      em.flush();
+      em.clear();
+
+      // when
+      List<Retro> result = retroRepository.searchCommunityFeed(null, null, null, null, 10);
+
+      // then
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getCompanyName()).isEqualTo("네이버");
+    }
+
+    @Test
+    @DisplayName("성공: keyword로 회사명을 검색하면 포함하는 회고만 반환한다")
+    void filterByKeyword_matchesCompanyName() {
+      // given
+      Member member = createPublicMember();
+      saveRetro(member.getId(), "네이버", "백엔드", "1차", "#Java");
+      saveRetro(member.getId(), "카카오", "백엔드", "1차", "#Kotlin");
+      em.flush();
+      em.clear();
+
+      // when
+      List<Retro> result = retroRepository.searchCommunityFeed("네이버", null, null, null, 10);
+
+      // then
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getCompanyName()).isEqualTo("네이버");
+    }
+
+    @Test
+    @DisplayName("성공: keyword로 태그를 검색하면 포함하는 회고만 반환한다")
+    void filterByKeyword_matchesTags() {
+      // given
+      Member member = createPublicMember();
+      saveRetro(member.getId(), "라인", "백엔드", "1차", "#Spring #Java");
+      saveRetro(member.getId(), "토스", "백엔드", "1차", "#Node");
+      em.flush();
+      em.clear();
+
+      // when
+      List<Retro> result = retroRepository.searchCommunityFeed("Spring", null, null, null, 10);
+
+      // then
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getCompanyName()).isEqualTo("라인");
+    }
+
+    @Test
+    @DisplayName("성공: position 조건으로 직무가 일치하는 회고만 반환한다")
+    void filterByPosition() {
+      // given
+      Member member = createPublicMember();
+      saveRetro(member.getId(), "네이버", "백엔드", "1차", "#Java");
+      saveRetro(member.getId(), "네이버", "프론트엔드", "1차", "#React");
+      em.flush();
+      em.clear();
+
+      // when
+      List<Retro> result = retroRepository.searchCommunityFeed(null, "백엔드", null, null, 10);
+
+      // then
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getPosition()).isEqualTo("백엔드");
+    }
+
+    @Test
+    @DisplayName("성공: interviewRound 조건으로 면접 차수가 일치하는 회고만 반환한다")
+    void filterByInterviewRound() {
+      // given
+      Member member = createPublicMember();
+      saveRetro(member.getId(), "토스", "iOS", "1차", "#Swift");
+      saveRetro(member.getId(), "토스", "iOS", "2차", "#Swift");
+      em.flush();
+      em.clear();
+
+      // when
+      List<Retro> result = retroRepository.searchCommunityFeed(null, null, "2차", null, 10);
+
+      // then
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getInterviewRound()).isEqualTo("2차");
+    }
+
+    @Test
+    @DisplayName("성공: cursorId 기준으로 그보다 작은 retroId의 회고만 반환한다")
+    void filterByCursorId() {
+      // given
+      Member member = createPublicMember();
+      Retro r1 = saveRetro(member.getId(), "A사", "백엔드", "1차", "#A");
+      Retro r2 = saveRetro(member.getId(), "B사", "백엔드", "1차", "#B");
+      Retro r3 = saveRetro(member.getId(), "C사", "백엔드", "1차", "#C");
+      em.flush();
+      em.clear();
+
+      Long cursorId = r3.getRetroId();
+
+      // when
+      List<Retro> result = retroRepository.searchCommunityFeed(null, null, null, cursorId, 10);
+
+      // then
+      assertThat(result).hasSize(2);
+      assertThat(result).noneMatch(r -> r.getRetroId().equals(r3.getRetroId()));
+    }
+
+    @Test
+    @DisplayName("성공: 검색 결과가 없으면 빈 리스트를 반환한다")
+    void noMatch_returnsEmptyList() {
+      // given
+      Member member = createPublicMember();
+      saveRetro(member.getId(), "네이버", "백엔드", "1차", "#Java");
+      em.flush();
+      em.clear();
+
+      // when
+      List<Retro> result = retroRepository.searchCommunityFeed("존재하지않는회사", null, null, null, 10);
+
+      // then
+      assertThat(result).isEmpty();
+    }
+  }
+
   // Member 생성 헬퍼 메서드
   private Member createAndSaveMember() {
     Term term = Term.from(true);
     Member member = Member.of(Provider.KAKAO, UUID.randomUUID().toString(), "닉네임", term);
     return memberRepository.save(member);
+  }
+
+  private Member createPublicMember() {
+    Member member = createAndSaveMember();
+    member.openOwnPublication();
+    memberRepository.save(member);
+    return member;
+  }
+
+  private Retro saveRetro(Long memberId, String company, String position, String round,
+      String tags) {
+    Retro retro = Retro.of(memberId, company, position, LocalDate.now(), round, tags, "K", "P",
+        "T", "요약");
+    return retroRepository.save(retro);
   }
 }

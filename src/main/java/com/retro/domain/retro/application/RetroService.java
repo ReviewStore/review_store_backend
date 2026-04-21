@@ -224,4 +224,21 @@ public class RetroService {
     Long nextCursor = getNextCursor(hasNext, retros);
     return CommunityRetroFeedCursorPageResponse.of(responses, nextCursor, hasNext);
   }
+
+  public CommunityRetroFeedCursorPageResponse searchCommunityFeed(
+      String keyword, String position, String interviewRound, Long cursorId, int size) {
+    final int pageSizePlusOne = size + 1;
+    List<Retro> retros = retroRepository.searchCommunityFeed(keyword, position, interviewRound,
+        cursorId, pageSizePlusOne);
+    boolean hasNext = hasMoreRetros(size, retros);
+    if (hasNext) {
+      retros = sliceRetros(size, retros);
+    }
+    List<CommunityRetroCardResponse> responses = retros.stream()
+        .map(CommunityRetroCardResponse::from)
+        .toList();
+    Long nextCursor = getNextCursor(hasNext, retros);
+    return CommunityRetroFeedCursorPageResponse.of(responses, nextCursor, hasNext);
+  }
+
 }

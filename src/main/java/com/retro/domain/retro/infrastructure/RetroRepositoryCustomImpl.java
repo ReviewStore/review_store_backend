@@ -51,6 +51,47 @@ public class RetroRepositoryCustomImpl implements RetroRepositoryCustom {
   }
 
   @Override
+  public List<Retro> searchCommunityFeed(String keyword, String position, String interviewRound,
+      Long cursorId, int size) {
+    return jpaQueryFactory
+        .selectFrom(retro)
+        .join(member).on(retro.memberId.eq(member.id))
+        .where(buildSearchPredicate(keyword, position, interviewRound, cursorId))
+        .orderBy(retro.retroId.desc())
+        .limit(size)
+        .fetch();
+  }
+
+  private BooleanBuilder buildSearchPredicate(String keyword, String position,
+      String interviewRound, Long cursorId) {
+    BooleanBuilder predicate = new BooleanBuilder();
+    predicate.and(member.isPublic.isTrue());
+    predicate.and(retro.blinded.isFalse());
+
+    if (hasValue(keyword)) {
+      predicate.and(
+          retro.companyName.containsIgnoreCase(keyword)
+              .or(retro.interviewTags.containsIgnoreCase(keyword))
+      );
+    }
+    if (hasValue(position)) {
+      predicate.and(retro.position.containsIgnoreCase(position));
+    }
+    if (hasValue(interviewRound)) {
+      predicate.and(retro.interviewRound.eq(interviewRound));
+    }
+    if (!Objects.isNull(cursorId)) {
+      predicate.and(retro.retroId.lt(cursorId));
+    }
+
+    return predicate;
+  }
+
+  private boolean hasValue(String value) {
+    return Objects.nonNull(value) && !value.isBlank();
+  }
+
+  @Override
   public List<Retro> findPublicRetrosWithCursor(Long cursorId, int size) {
     return jpaQueryFactory
         .selectFrom(retro)

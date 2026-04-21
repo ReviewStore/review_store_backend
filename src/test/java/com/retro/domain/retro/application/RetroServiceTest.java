@@ -750,5 +750,132 @@ class RetroServiceTest {
     }
   }
 
+  @Nested
+  @DisplayName("커뮤니티 피드 검색/필터링(searchCommunityFeed)")
+  class SearchCommunityFeed {
+
+    private static final int SIZE = 2;
+    private static final int PAGE_SIZE_PLUS_ONE = 3;
+
+    private Retro makeRetro(Long memberId, String company, String position, String round,
+        String tags, Long retroId) {
+      Retro r = Retro.of(memberId, company, position, LocalDate.now(), round, tags, "K", "P", "T",
+          "요약");
+      ReflectionTestUtils.setField(r, "retroId", retroId);
+      return r;
+    }
+
+    @Test
+    @DisplayName("성공: 조건 없이 전체 공개 회고 목록을 반환한다")
+    void success_noFilter() {
+      // given
+      Retro r1 = makeRetro(1L, "네이버", "백엔드", "1차", "#Java", 101L);
+      Retro r2 = makeRetro(2L, "카카오", "프론트엔드", "2차", "#React", 100L);
+
+      given(retroRepository.searchCommunityFeed(null, null, null, null, PAGE_SIZE_PLUS_ONE))
+          .willReturn(List.of(r1, r2));
+
+      // when
+      CommunityRetroFeedCursorPageResponse response =
+          retroService.searchCommunityFeed(null, null, null, null, SIZE);
+
+      // then
+      assertThat(response.retros()).hasSize(2);
+      assertThat(response.hasNext()).isFalse();
+      assertThat(response.nextCursor()).isNull();
+    }
+
+    @Test
+    @DisplayName("성공: keyword 조건으로 회사명이 일치하는 회고를 반환한다")
+    void success_filterByKeyword() {
+      // given
+      Retro r1 = makeRetro(1L, "네이버", "백엔드", "1차", "#Java", 101L);
+
+      given(retroRepository.searchCommunityFeed("네이버", null, null, null, PAGE_SIZE_PLUS_ONE))
+          .willReturn(List.of(r1));
+
+      // when
+      CommunityRetroFeedCursorPageResponse response =
+          retroService.searchCommunityFeed("네이버", null, null, null, SIZE);
+
+      // then
+      assertThat(response.retros()).hasSize(1);
+      assertThat(response.retros().get(0).company()).isEqualTo("네이버");
+    }
+
+    @Test
+    @DisplayName("성공: position 조건으로 직무가 일치하는 회고를 반환한다")
+    void success_filterByPosition() {
+      // given
+      Retro r1 = makeRetro(1L, "라인", "백엔드", "1차", "#Go", 101L);
+
+      given(retroRepository.searchCommunityFeed(null, "백엔드", null, null, PAGE_SIZE_PLUS_ONE))
+          .willReturn(List.of(r1));
+
+      // when
+      CommunityRetroFeedCursorPageResponse response =
+          retroService.searchCommunityFeed(null, "백엔드", null, null, SIZE);
+
+      // then
+      assertThat(response.retros()).hasSize(1);
+      assertThat(response.retros().get(0).position()).isEqualTo("백엔드");
+    }
+
+    @Test
+    @DisplayName("성공: interviewRound 조건으로 면접 차수가 일치하는 회고를 반환한다")
+    void success_filterByInterviewRound() {
+      // given
+      Retro r1 = makeRetro(1L, "토스", "iOS", "2차", "#Swift", 101L);
+
+      given(retroRepository.searchCommunityFeed(null, null, "2차", null, PAGE_SIZE_PLUS_ONE))
+          .willReturn(List.of(r1));
+
+      // when
+      CommunityRetroFeedCursorPageResponse response =
+          retroService.searchCommunityFeed(null, null, "2차", null, SIZE);
+
+      // then
+      assertThat(response.retros()).hasSize(1);
+      assertThat(response.retros().get(0).interviewRound()).isEqualTo("2차");
+    }
+
+    @Test
+    @DisplayName("성공: 페이지 크기 초과 시 hasNext=true와 nextCursor를 반환한다")
+    void success_hasNextTrue() {
+      // given
+      Retro r1 = makeRetro(1L, "A사", "백엔드", "1차", "#A", 103L);
+      Retro r2 = makeRetro(2L, "B사", "프론트엔드", "1차", "#B", 102L);
+      Retro r3 = makeRetro(3L, "C사", "데브옵스", "1차", "#C", 101L);
+
+      given(retroRepository.searchCommunityFeed(null, null, null, null, PAGE_SIZE_PLUS_ONE))
+          .willReturn(List.of(r1, r2, r3));
+
+      // when
+      CommunityRetroFeedCursorPageResponse response =
+          retroService.searchCommunityFeed(null, null, null, null, SIZE);
+
+      // then
+      assertThat(response.retros()).hasSize(2);
+      assertThat(response.hasNext()).isTrue();
+      assertThat(response.nextCursor()).isEqualTo(102L);
+    }
+
+    @Test
+    @DisplayName("성공: 검색 결과가 없으면 빈 목록과 hasNext=false를 반환한다")
+    void success_emptyResult() {
+      // given
+      given(retroRepository.searchCommunityFeed("없는회사", null, null, null, PAGE_SIZE_PLUS_ONE))
+          .willReturn(Collections.emptyList());
+
+      // when
+      CommunityRetroFeedCursorPageResponse response =
+          retroService.searchCommunityFeed("없는회사", null, null, null, SIZE);
+
+      // then
+      assertThat(response.retros()).isEmpty();
+      assertThat(response.hasNext()).isFalse();
+      assertThat(response.nextCursor()).isNull();
+    }
+  }
 
 }

@@ -169,5 +169,21 @@ public class RetroController {
     CommunityRetroFeedCursorPageResponse response = retroService.getCommunityFeed(cursorId, size);
     return ApiResponse.success(response);
   }
+
+  @Operation(
+      summary = "커뮤니티 피드 검색/필터링",
+      description = "회사명·태그 키워드, 직무, 면접 차수로 공개 회고 카드를 검색합니다. 모든 조건은 선택 사항이며 커서 기반 페이지네이션을 지원합니다."
+  )
+  @GetMapping("/search-filters")
+  public ApiResponse<CommunityRetroFeedCursorPageResponse> searchCommunityFeed(
+      @RequestParam(required = false) String keyword,
+      @RequestParam(required = false) String position,
+      @RequestParam(required = false) String interviewRound,
+      @RequestParam(required = false) Long cursorId,
+      @RequestParam(defaultValue = "20") int size) {
+    CommunityRetroFeedCursorPageResponse response = retroService.searchCommunityFeed(
+        keyword, position, interviewRound, cursorId, size);
+    return ApiResponse.success(response);
+  }
 }
 
