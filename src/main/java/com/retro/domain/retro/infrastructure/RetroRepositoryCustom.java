@@ -11,4 +11,6 @@ public interface RetroRepositoryCustom {
 
   Optional<RetroReport> existsReportByRetroAndReporter(Long retroId, Long reporterMemberId);
 
+  List<Retro> findPublicRetrosWithCursor(Long cursorId, int size);
+
 }

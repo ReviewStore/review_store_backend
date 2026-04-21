@@ -44,7 +44,7 @@ springdoc:
     disable-swagger-default-url: true
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
-  
+
 # RabbitMQ 설정
 app:
   rabbitmq:
@@ -56,3 +56,25 @@ app:
       routing-key: notice.created
       chunk-size: 1000
       max-retry-count: 3
+
+# Monitoring 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+
+# Logging 설정 (Loki/Promtail 수집 대상)
+logging:
+  file:
+    name: logs/application.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

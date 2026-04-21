@@ -52,6 +52,8 @@ jobs:
             df -h /
             echo "[CHECK] Ensure directories"
             mkdir -p /home/retrospection1234/spring-boot/review_store_backend/build/libs
+            mkdir -p /home/retrospection1234/spring-boot/review_store_backend/container
+            mkdir -p /home/retrospection1234/spring-boot/review_store_backend/deploy
 
       # 7. JAR 전송 (임시 파일명)
       - name: Copy jar to GCP VM
@@ -61,7 +63,7 @@ jobs:
           username: ${{ secrets.GCP_USERNAME }}
           key: ${{ secrets.GCP_PRIVATE_KEY }}
           port: 2222
-          source: build/libs/app.jar
+          source: build/libs/app.jar,container,deploy
           target: /home/***/spring-boot/review_store_backend
           overwrite: true
 
@@ -82,7 +84,7 @@ jobs:
             sleep 2
             
             echo "[DEPLOY] Start new process"
-            nohup java -jar build/libs/app.jar > output.log 2>&1 &
+            nohup java -jar build/libs/app.jar > /dev/null 2>&1 &
             
             echo "[VERIFY] Process running"
             sleep 5
