@@ -19,7 +19,7 @@ public enum ErrorCode {
   RETRO_BLINDED(403, "RETRO-2003", "블라인드 처리된 게시물입니다."),
   RETRO_ALREADY_REPORTED(400, "RETRO-2004", "이미 신고한 게시물입니다."),
   RETRO_NOT_OWNER(403, "RETRO-2005", "본인이 작성한 회고만 수정/삭제할 수 있습니다."),
-  
+
   // ===== 3000번대: 질문 관련 =====
   QUESTION_NOT_FOUND(404, "QUESTION-3001", "존재하지 않는 질문입니다."),
 
@@ -28,6 +28,10 @@ public enum ErrorCode {
 
   // ===== 5000번대: 알림 관련 =====
   NOTIFICATION_NOT_FOUND(404, "NOTIFICATION-5001", "존재하지 않는 알림입니다."),
+
+  // ===== 6000번대: 차단 관련 =====
+  DUPLICATE_BLOCK(400, "BLOCK-6001", "이미 차단된 사용자입니다."),
+
 
   // ===== 9000번대: 공통 에러 =====
   INVALID_INPUT_VALUE(400, "COMMON-9001", "유효하지 않은 입력값입니다."),
