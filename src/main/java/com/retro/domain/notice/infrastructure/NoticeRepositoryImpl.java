@@ -3,6 +3,7 @@ package com.retro.domain.notice.infrastructure;
 import com.retro.domain.notice.domain.entity.Notice;
 import com.retro.domain.notice.domain.entity.repository.NoticeRepository;
 import com.retro.domain.notice.infrastructure.jpa.NoticeJPARepository;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 public class NoticeRepositoryImpl implements NoticeRepository {
 
   private final NoticeJPARepository noticeJPARepository;
+  private final NoticeRepositoryCustom noticeRepositoryCustom;
 
   @Override
   public Notice createNotice(Notice notice) {
@@ -21,5 +23,10 @@ public class NoticeRepositoryImpl implements NoticeRepository {
   @Override
   public Optional<Notice> getNotice(Long noticeId) {
     return noticeJPARepository.findById(noticeId);
+  }
+
+  @Override
+  public List<Notice> findNoticesWithCursor(Long cursorId, int size) {
+    return noticeRepositoryCustom.findNoticesWithCursor(cursorId, size);
   }
 }

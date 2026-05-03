@@ -1,6 +1,7 @@
 package com.retro.domain.notice.domain.entity.repository;
 
 import com.retro.domain.notice.domain.entity.Notice;
+import java.util.List;
 import java.util.Optional;
 
 public interface NoticeRepository {
@@ -8,4 +9,6 @@ public interface NoticeRepository {
   public Notice createNotice(Notice notice);
 
   public Optional<Notice> getNotice(Long noticeId);
+
+  List<Notice> findNoticesWithCursor(Long cursorId, int size);
 }
