@@ -374,6 +374,7 @@ class RetroServiceTest {
       given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
       given(retro.getMemberId()).willReturn(authorId);
       given(retro.isCreatedByViewer(authorId, viewerId)).willReturn(false);
+      given(viewer.canViewOtherRetros()).willReturn(true);
       given(viewer.isPostReadCountExceeded()).willReturn(true);
 
       // when & then
@@ -399,6 +400,7 @@ class RetroServiceTest {
       given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
       given(retro.getMemberId()).willReturn(authorId);
       given(retro.isCreatedByViewer(authorId, viewerId)).willReturn(false);
+      given(viewer.canViewOtherRetros()).willReturn(true);
       given(viewer.isPostReadCountExceeded()).willReturn(false);
 
       // when
@@ -407,6 +409,83 @@ class RetroServiceTest {
       // then
       assertThat(response).isNotNull();
       verify(viewer).reduceRemainingPostReadCount();
+    }
+
+    @Test
+    @DisplayName("성공: 공개 설정한 사용자는 타인의 회고를 열람할 수 있다")
+    void success_publicViewer_canReadOthersRetro() {
+      // given
+      Long viewerId = 1L;
+      Long authorId = 2L;
+      Long retroId = 10L;
+
+      Member viewer = mock(Member.class);
+      Retro retro = mock(Retro.class);
+
+      given(memberFacade.getMember(viewerId)).willReturn(viewer);
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+      given(retro.isBlindedRetro()).willReturn(false);
+      given(retro.getMemberId()).willReturn(authorId);
+      given(retro.isCreatedByViewer(authorId, viewerId)).willReturn(false);
+      given(viewer.canViewOtherRetros()).willReturn(true);
+      given(viewer.isPostReadCountExceeded()).willReturn(false);
+      given(viewer.hasOneRemainingPostReadCount()).willReturn(false);
+
+      // when
+      retroService.getRetro(viewerId, retroId);
+
+      // then
+      verify(viewer).reduceRemainingPostReadCount();
+    }
+
+    @Test
+    @DisplayName("실패: 본인의 회고를 비공개로 설정한 사용자는 타인의 회고를 열람할 수 없다")
+    void fail_privateViewer_cannotReadOthersRetro() {
+      // given
+      Long viewerId = 1L;
+      Long authorId = 2L;
+      Long retroId = 10L;
+
+      Member viewer = mock(Member.class);
+      Retro retro = mock(Retro.class);
+
+      given(memberFacade.getMember(viewerId)).willReturn(viewer);
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+      given(retro.isBlindedRetro()).willReturn(false);
+      given(retro.getMemberId()).willReturn(authorId);
+      given(retro.isCreatedByViewer(authorId, viewerId)).willReturn(false);
+      given(viewer.canViewOtherRetros()).willReturn(false);
+
+      // when & then
+      assertThatThrownBy(() -> retroService.getRetro(viewerId, retroId))
+          .isInstanceOf(BusinessException.class)
+          .hasFieldOrPropertyWithValue("errorCode", ErrorCode.RETRO_VIEW_NOT_PERMITTED);
+
+      verify(viewer, never()).reduceRemainingPostReadCount();
+    }
+
+    @Test
+    @DisplayName("성공: 본인의 회고는 공개 여부와 무관하게 열람할 수 있다")
+    void success_author_canAlwaysReadOwnRetro() {
+      // given
+      Long viewerId = 1L;
+      Long retroId = 10L;
+
+      Member viewer = mock(Member.class);
+      Retro retro = mock(Retro.class);
+
+      given(memberFacade.getMember(viewerId)).willReturn(viewer);
+      given(retroRepository.findById(retroId)).willReturn(Optional.of(retro));
+      given(retro.isBlindedRetro()).willReturn(false);
+      given(retro.getMemberId()).willReturn(viewerId);
+      given(retro.isCreatedByViewer(viewerId, viewerId)).willReturn(true);
+
+      // when
+      retroService.getRetro(viewerId, retroId);
+
+      // then
+      verify(viewer, never()).canViewOtherRetros();
+      verify(viewer, never()).reduceRemainingPostReadCount();
     }
   }
 

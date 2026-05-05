@@ -4,6 +4,8 @@ import com.retro.domain.notice.application.NoticeService;
 import com.retro.domain.notice.application.dto.NoticeCreateRequest;
 import com.retro.domain.notice.application.dto.NoticeCreateResponse;
 import com.retro.domain.notice.application.dto.NoticeResponse;
+import com.retro.domain.notice.application.dto.NoticeCursorPageResponse;
+import org.springframework.web.bind.annotation.RequestParam;
 import com.retro.domain.notice.domain.entity.Notice;
 import com.retro.global.common.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +43,25 @@ public class NoticeController {
   public ApiResponse<NoticeCreateResponse> createNotice(
       @RequestBody @Valid NoticeCreateRequest request) {
     NoticeCreateResponse response = noticeService.createNotice(request);
+    return ApiResponse.success(response);
+  }
+
+  @Operation(
+      summary = "공지사항 목록 조회",
+      description = "등록된 공지사항 목록을 생성일자(또는 id) 내림차순으로 커서 기반 조회합니다."
+  )
+  @io.swagger.v3.oas.annotations.responses.ApiResponse(
+      responseCode = "200",
+      description = "성공",
+      content = @io.swagger.v3.oas.annotations.media.Content(
+          mediaType = MediaType.APPLICATION_JSON_VALUE
+      )
+  )
+  @GetMapping
+  public ApiResponse<NoticeCursorPageResponse> getNotices(
+      @RequestParam(required = false) Long cursorId,
+      @RequestParam(defaultValue = "20") int size) {
+    NoticeCursorPageResponse response = noticeService.getNotices(cursorId, size);
     return ApiResponse.success(response);
   }
 
