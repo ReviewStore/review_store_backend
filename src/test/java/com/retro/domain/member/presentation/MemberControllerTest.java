@@ -4,11 +4,14 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.retro.domain.member.application.MemberService;
+import com.retro.domain.member.application.dto.MemberNicknameResponse;
 import com.retro.domain.member.application.dto.MemberNicknameUpdateRequest;
 import com.retro.global.common.utils.SecurityUtil;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +43,32 @@ class MemberControllerTest {
 
   @MockitoBean
   private SecurityUtil securityUtil;
+
+  @Test
+  @WithMockUser
+  @DisplayName("통합 성공: 닉네임 조회 시 200 OK와 닉네임 반환")
+  void getNicknameSuccess() throws Exception {
+    // Given
+    Long memberId = 1L;
+    MemberNicknameResponse response = MemberNicknameResponse.from("회고러123");
+    given(securityUtil.getAuthenticatedUserId()).willReturn(memberId);
+    given(memberService.getNickname(memberId)).willReturn(response);
+
+    // When & Then
+    mockMvc.perform(get("/api/v1/members/nickname")
+            .contentType(APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.nickname").value("회고러123"));
+  }
+
+  @Test
+  @DisplayName("통합 실패: 미인증 사용자가 닉네임 조회 시 401 Unauthorized")
+  void getNicknameUnauthorized() throws Exception {
+    // When & Then
+    mockMvc.perform(get("/api/v1/members/nickname")
+            .contentType(APPLICATION_JSON))
+        .andExpect(status().isUnauthorized());
+  }
 
   @Test
   @WithMockUser

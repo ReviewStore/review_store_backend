@@ -2,6 +2,7 @@ package com.retro.domain.member.presentation;
 
 import com.retro.domain.member.application.MemberService;
 import com.retro.domain.member.application.dto.MemberMarketingAgreedUpdateRequest;
+import com.retro.domain.member.application.dto.MemberNicknameResponse;
 import com.retro.domain.member.application.dto.MemberNicknameUpdateRequest;
 import com.retro.domain.member.application.dto.MemberPublicUpdateRequest;
 import com.retro.domain.member.application.dto.MemberServiceTermAgreedUpdateRequest;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,6 +46,23 @@ public class MemberController {
   ) {
     memberService.updatePostPublicStatus(securityUtil.getAuthenticatedUserId(), request.isPublic());
     return ApiResponse.success();
+  }
+
+  @Operation(
+      summary = "닉네임 조회",
+      description = "현재 인증된 회원의 닉네임을 조회합니다."
+  )
+  @io.swagger.v3.oas.annotations.responses.ApiResponse(
+      responseCode = "200",
+      description = "성공",
+      content = @io.swagger.v3.oas.annotations.media.Content(
+          mediaType = MediaType.APPLICATION_JSON_VALUE
+      )
+  )
+  @GetMapping("/nickname")
+  public ApiResponse<MemberNicknameResponse> getNickname() {
+    MemberNicknameResponse response = memberService.getNickname(securityUtil.getAuthenticatedUserId());
+    return ApiResponse.success(response);
   }
 
   @Operation(

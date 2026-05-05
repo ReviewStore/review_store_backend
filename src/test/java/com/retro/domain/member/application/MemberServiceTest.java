@@ -1,17 +1,20 @@
 package com.retro.domain.member.application;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 
+import com.retro.domain.member.application.dto.MemberNicknameResponse;
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.entity.Provider;
 import com.retro.domain.member.domain.entity.RetroReadPermission;
 import com.retro.domain.member.domain.entity.Term;
 import com.retro.domain.member.domain.event.MemberEventPublisher;
+import com.retro.global.common.exception.BusinessException;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,6 +86,33 @@ class MemberServiceTest {
     // then
     assertThat(member.getIsPublic()).isFalse();
     assertThat(member.getRetroReadPermission()).isEqualTo(RetroReadPermission.LIMITED);
+  }
+
+  @Test
+  @DisplayName("성공: 닉네임 조회 시 현재 닉네임을 반환한다.")
+  void getNickname() {
+    // given
+    Long memberId = 1L;
+    Member member = Member.of(Provider.GOOGLE, "google-123", "테스트닉네임", Term.from(true));
+    given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
+
+    // when
+    MemberNicknameResponse response = memberService.getNickname(memberId);
+
+    // then
+    assertThat(response.nickname()).isEqualTo("테스트닉네임");
+  }
+
+  @Test
+  @DisplayName("실패: 존재하지 않는 회원 닉네임 조회 시 BusinessException이 발생한다.")
+  void getNickname_throwException_whenMemberNotFound() {
+    // given
+    Long memberId = 99L;
+    given(memberRepository.findById(memberId)).willReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> memberService.getNickname(memberId))
+        .isInstanceOf(BusinessException.class);
   }
 
   @Test
