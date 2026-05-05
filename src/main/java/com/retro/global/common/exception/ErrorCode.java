@@ -30,6 +30,10 @@ public enum ErrorCode {
   // ===== 5000번대: 알림 관련 =====
   NOTIFICATION_NOT_FOUND(404, "NOTIFICATION-5001", "존재하지 않는 알림입니다."),
 
+  // ===== 6000번대: 차단 관련 =====
+  DUPLICATE_BLOCK(400, "BLOCK-6001", "이미 차단된 사용자입니다."),
+
+
   // ===== 9000번대: 공통 에러 =====
   INVALID_INPUT_VALUE(400, "COMMON-9001", "유효하지 않은 입력값입니다."),
   UNAUTHORIZED(400, "COMMON-9002", "권한이 없습니다."),
