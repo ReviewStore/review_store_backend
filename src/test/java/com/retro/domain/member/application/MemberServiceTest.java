@@ -34,7 +34,7 @@ class MemberServiceTest {
   private MemberEventPublisher memberEventPublisher;
 
   @Test
-  @DisplayName("성공: 공개 설정을 true로 변경하면 게시물이 공개된다.")
+  @DisplayName("성공: 공개 설정을 true로 변경하면 게시물이 공개되고 열람 권한이 무제한이 된다.")
   void updatePostPublicStatusOpen() {
     // given
     Long memberId = 1L;
@@ -46,6 +46,25 @@ class MemberServiceTest {
 
     // then
     assertThat(member.getIsPublic()).isTrue();
+    assertThat(member.getRetroReadPermission()).isEqualTo(RetroReadPermission.UNLIMITED);
+  }
+
+  @Test
+  @DisplayName("성공: 이미 무제한 권한을 가진 경우 공개 설정을 true로 변경해도 권한이 유지된다.")
+  void updatePostPublicStatusOpen_alreadyUnlimited() {
+    // given
+    Long memberId = 1L;
+    Member member = Member.of(Provider.APPLE, "apple-123", "닉네임", Term.from(true));
+    member.openOwnPublication();
+    member.grantPostReadPermission();
+    given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
+
+    // when
+    memberService.updatePostPublicStatus(memberId, true);
+
+    // then
+    assertThat(member.getIsPublic()).isTrue();
+    assertThat(member.getRetroReadPermission()).isEqualTo(RetroReadPermission.UNLIMITED);
   }
 
   @Test
