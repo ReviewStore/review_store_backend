@@ -1,5 +1,6 @@
 package com.retro.domain.member.application;
 
+import com.retro.domain.member.application.dto.MemberNicknameResponse;
 import com.retro.domain.member.domain.MemberRepository;
 import com.retro.domain.member.domain.entity.Member;
 import com.retro.domain.member.domain.event.MemberEventPublisher;
@@ -41,6 +42,11 @@ public class MemberService {
       return;
     }
     member.closeOwnPublication();
+  }
+
+  public MemberNicknameResponse getNickname(Long memberId) {
+    Member member = getMember(memberId);
+    return MemberNicknameResponse.from(member.getNickname());
   }
 
   @Transactional
